@@ -172,7 +172,7 @@ section{ padding-top:var(--gut); padding-bottom:var(--gut); }
 .tagline em{ font-style:normal; color:var(--phosphor-hot); }
 #typed{
   margin-top:var(--gut); font-size:13px;
-  color:var(--phosphor-dim); min-height:calc(var(--cell)*4);
+  color:var(--phosphor-dim); min-height:calc(var(--cell)*6);
 }
 #typed .p{ color:var(--phosphor); }
 .caret{
@@ -223,6 +223,8 @@ section{ padding-top:var(--gut); padding-bottom:var(--gut); }
 .f-body.open{ display:block; animation:wipe .22s ease-out; }
 @keyframes wipe{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;} }
 .f-body b{ color:var(--phosphor); font-weight:500; }
+.f-body br + br{ line-height:var(--cell); }
+.f-body > div:first-child{ max-width:66ch; }
 .f-meta{
   margin-top:var(--cell); display:flex; flex-wrap:wrap; gap:var(--cell);
   font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--phosphor-ash);

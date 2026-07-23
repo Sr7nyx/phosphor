@@ -291,21 +291,29 @@
         markup builds itself.
      ======================================================== */
   var FINDINGS = [
-    { s: 4, id: 'VAPT-001', title: 'AI-assisted triage assistant', status: 'shipped',
-      body: 'A Streamlit console that ingests Burp, ZAP, Nessus, Nmap and CSV output, normalises it, then runs a <b>deliberately sceptical reviewer</b> over every candidate before a human ever sees it. Deterministic pre-filters drop informational noise so model calls are spent only where judgement is needed. Verdicts fold straight into the report pipeline.',
-      meta: ['python', 'streamlit', 'gemini', 'docker'] },
-    { s: 3, id: 'VAPT-002', title: 'Payment checkout assessment', status: 'closed',
-      body: 'Full application-layer review of a card checkout flow. The scanner produced a confident list; after manual verification the exploitable count was <b>zero</b>. Host-header poisoning on static assets, CDN signing tokens and header gaps all failed validation. The value of the engagement was the disproof, and the client got a defensible report saying so.',
-      meta: ['burp suite', 'manual verification', 'cvss v3.1'] },
-    { s: 3, id: 'VAPT-003', title: 'Enterprise vulnerability management', status: 'ongoing',
-      body: 'Triage, risk prioritisation and remediation tracking across a live estate. SSVC decision points and the CISA KEV catalogue drive ordering rather than raw CVSS, so remediation effort lands where exploitation is actually plausible. Includes SLA design and the executive reporting layer above it.',
-      meta: ['ssvc', 'cisa kev', 'sla design'] },
-    { s: 2, id: 'VAPT-004', title: 'Scanner normalisation pipeline', status: 'shipped',
-      body: 'Five scanner dialects into one schema. Asset-aware deduplication keys on title, host, URL and parameter, which keeps same-issue-different-endpoint findings separate instead of silently collapsing them. CWE extraction requires the literal token, so an HTTP 500 never becomes CWE-500.',
-      meta: ['xml', 'json', 'csv', 'dedup'] },
-    { s: 1, id: 'VAPT-005', title: 'Report generation and QA', status: 'shipped',
-      body: 'Structured output following the OWASP Testing Guide and PTES, with an automated QA lane that flags missing evidence, unmapped CWEs and severity that does not match the described impact before the document leaves the building.',
-      meta: ['owasp', 'ptes', 'docx'] }
+    { s: 4, id: 'REG-001', title: 'vapt.console', status: 'active',
+      body: 'An AI-assisted VAPT platform I built because scanner triage was eating the hours that should go to testing. It ingests <b>Burp, ZAP, Nessus, Nmap and CSV</b>, normalises five dialects into one schema, and runs findings through a two-lane model pipeline \u2014 a fast lane for extraction, then a deliberately <b>sceptical reviewer</b> that has to be convinced the evidence proves the claim before anything reaches an analyst.<br><br>The parts I care most about are the ones that stop the model lying. CVSS base scores are <b>recomputed deterministically</b> from the vector and flagged when the model\u2019s severity disagrees with the arithmetic. Quoted evidence is <b>checked back against the source</b> and marked verified, partial or unverified, so fabricated proof surfaces instead of shipping. CVE references are enriched with <b>EPSS, CISA KEV and NVD</b> so prioritisation follows real exploitation signal rather than base score alone.',
+      meta: ['python', 'streamlit', 'openrouter', 'docker', 'huggingface'] },
+
+    { s: 3, id: 'REG-002', title: 'Agentic Exploit Validation Platform', status: 'in progress',
+      body: 'Current build. Where vapt.console reasons about a finding from its evidence, AEVP is aimed at the step after: <b>agentic validation of whether a candidate finding is actually exploitable</b> in a scoped, authorised environment, rather than leaving that judgement entirely to a human reading scanner output.<br><br><b>This entry is a placeholder \u2014 replace it with the real architecture and scope before publishing.</b>',
+      meta: ['in progress', 'agentic', 'validation'] },
+
+    { s: 3, id: 'REG-003', title: 'Production testing at AirAsia', status: 'ongoing',
+      body: 'Weekly automated vulnerability assessment and manual web application testing against production assets, driven off active security tickets. I validate what the scanners raise, assign severity against business impact rather than default scanner ratings, and work with the IT and application teams through patching, configuration fixes and retest.<br><br>The reporting side is half the job: vulnerability reports, ticket lifecycle, and remediation KPIs that show whether risk is actually going down.',
+      meta: ['burp suite', 'nessus', 'cvss v3.1', 'remediation tracking'] },
+
+    { s: 2, id: 'REG-004', title: 'Access governance and hardening review', status: 'closed',
+      body: 'Six months of information security compliance work at a licensed financial services provider. <b>Privileged access reviews in BeyondTrust</b>, CIS Benchmark and server hardening reviews to find configuration drift, and log, patch and security-metric monitoring feeding risk and remediation tracking.<br><br>The reason it sits in this register: governance work is where you learn why findings do not get fixed. That changes how you write them.',
+      meta: ['beyondtrust', 'cis benchmarks', 'pam', 'audit readiness'] },
+
+    { s: 2, id: 'REG-005', title: 'DocuChain', status: 'shipped',
+      body: 'Final year project. A document verification system on Ethereum, using <b>IPFS for storage and smart contracts for the verification logic</b>, with MetaMask authentication and role-based access, tested against Ganache.<br><br>Building the contracts is where the trust boundary of a decentralised app stops being theory \u2014 on-chain logic is public, immutable and adversarially readable by default.',
+      meta: ['solidity', 'ethereum', 'ipfs', 'react', 'express'] },
+
+    { s: 1, id: 'REG-006', title: 'Security of AI, not just security with it', status: 'ongoing',
+      body: 'A thread running through the work rather than a single project. Building an LLM pipeline that touches security evidence forces the other half of the question: evidence from a live target is <b>attacker-controlled input</b>, and it will try to steer the model.<br><br>vapt.console fences untrusted data in an unguessable random delimiter, detects and surfaces <b>prompt-injection indicators as analyst-facing intel</b> rather than silently obeying them, and keeps confidential engagement data away from retention-bearing model tiers. Mapped against the OWASP Top 10 for LLM Applications.',
+      meta: ['prompt injection', 'evidence grounding', 'owasp llm top 10', 'hcia-ai'] }
   ];
 
   var BLOCK = ['\u2591', '\u2592', '\u2593', '\u2588'];
@@ -348,7 +356,9 @@
     if (!el) return;
     var SEQ = [
       '$ whoami',
-      '  2 years. web, api, cloud, mobile, infrastructure.',
+      '  sunterresaa sankar \u2014 penetration tester, airasia',
+      '$ focus --list',
+      '  web + api testing. vulnerability triage. llm pipeline security.',
       '$ scope --status',
       '  authorised targets only. always.'
     ];
@@ -395,7 +405,7 @@
       ['', ''],
       ['LOADING OPERATOR PROFILE', 'dimline'],
       ['  handle ....... SUNTERRESAA', ''],
-      ['  role ......... junior penetration tester', ''],
+      ['  role ......... senior penetration tester', ''],
       ['  clearance .... authorised engagements only', ''],
       ['', ''],
       ['<span class="ok">READY</span>', '']
@@ -448,8 +458,9 @@
     var CMDS = {
       help: function () { say('available: <span class="hot">whoami  findings  scan  stack  contact  clear</span>'); },
       whoami: function () {
-        say('sunterresaa \u2014 junior penetration tester / vapt consultant');
-        say('web \u00b7 api \u00b7 cloud \u00b7 mobile \u00b7 infrastructure \u00b7 vulnerability management');
+        say('sunterresaa sankar \u2014 penetration tester, airasia');
+        say('bcs (hons) cybersecurity, multimedia university \u00b7 cgpa 3.60');
+        say('huawei hcia-security v4.0 \u00b7 hcia-ai v3.5');
       },
       findings: function () {
         FINDINGS.forEach(function (f) {
@@ -457,11 +468,12 @@
         });
       },
       stack: function () {
-        say('burp suite \u00b7 nessus \u00b7 nmap \u00b7 zap \u00b7 bloodhound \u00b7 hashcat \u00b7 metasploit');
-        say('owasp testing guide \u00b7 ptes \u00b7 cvss v3.1 \u00b7 ssvc \u00b7 mitre att&amp;ck');
+        say('burp suite \u00b7 nessus \u00b7 nmap \u00b7 zap \u00b7 metasploit \u00b7 wireshark \u00b7 beyondtrust');
+        say('python \u00b7 javascript \u00b7 react \u00b7 node \u00b7 solidity \u00b7 linux \u00b7 docker');
+        say('owasp top 10 + api top 10 \u00b7 owasp llm top 10 \u00b7 cvss v3.1 \u00b7 cis benchmarks');
       },
       contact: function () {
-        say('email, linkedin and github are below.');
+        say('email, linkedin, github and resume are below.');
         var l = document.querySelector('.links');
         if (l) l.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth' });
       },
@@ -478,6 +490,12 @@
           say('  10.0.0.' + hosts[n] + '  up  <span class="hot">' + ports[n] + '</span>');
           n++;
         }, 260);
+      },
+      console: function () {
+        say('vapt.console \u2014 ai-assisted vapt platform.');
+        say('five scanner formats in, one schema out. two-lane model pipeline');
+        say('with a sceptical reviewer, deterministic cvss, evidence grounding,');
+        say('and epss / kev / nvd enrichment. see <span class="hot">REG-001</span> above.');
       },
       clear: function () { log.innerHTML = ''; }
     };
