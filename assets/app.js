@@ -395,7 +395,7 @@
       ['', ''],
       ['LOADING OPERATOR PROFILE', 'dimline'],
       ['  handle ....... SUNTERRESAA', ''],
-      ['  role ......... senior penetration tester', ''],
+      ['  role ......... junior penetration tester', ''],
       ['  clearance .... authorised engagements only', ''],
       ['', ''],
       ['<span class="ok">READY</span>', '']
@@ -448,7 +448,7 @@
     var CMDS = {
       help: function () { say('available: <span class="hot">whoami  findings  scan  stack  contact  clear</span>'); },
       whoami: function () {
-        say('sunterresaa \u2014 senior penetration tester / vapt consultant');
+        say('sunterresaa \u2014 junior penetration tester / vapt consultant');
         say('web \u00b7 api \u00b7 cloud \u00b7 mobile \u00b7 infrastructure \u00b7 vulnerability management');
       },
       findings: function () {
@@ -461,7 +461,7 @@
         say('owasp testing guide \u00b7 ptes \u00b7 cvss v3.1 \u00b7 ssvc \u00b7 mitre att&amp;ck');
       },
       contact: function () {
-        say('email, linkedin, github and pgp key are below.');
+        say('email, linkedin and github are below.');
         var l = document.querySelector('.links');
         if (l) l.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth' });
       },
