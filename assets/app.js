@@ -348,7 +348,7 @@
     if (!el) return;
     var SEQ = [
       '$ whoami',
-      '  15 years. web, api, cloud, mobile, infrastructure.',
+      '  2 years. web, api, cloud, mobile, infrastructure.',
       '$ scope --status',
       '  authorised targets only. always.'
     ];
