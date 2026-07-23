@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sunterresaa Sankar — penetration tester</title>
+<meta name="description" content="Penetration tester at AirAsia. Web and API assessments, vulnerability triage, and vapt.console — an AI-assisted VAPT platform built around evidence grounding and false-positive reduction.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070503">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sunterresaa Sankar — penetration tester">
+<meta property="og:description" content="Penetration tester. Builder of vapt.console. Security of AI systems, and security with AI.">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/assets/fonts/IBMPlexMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/VT323-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+
+<canvas id="field" aria-hidden="true"></canvas>
+
+<div id="status">
+  <b>SUNTERRESAA</b>
+  <span class="hide-sm">VT220 / P3 AMBER</span>
+  <span class="spacer"></span>
+  <span class="hide-sm">UPTIME <b id="up">00:00:00</b></span>
+  <span class="live">LINK ACTIVE</span>
+</div>
+
+<div id="tube">
+
+  <section id="hero" class="pane">
+    <p class="eyebrow">Penetration testing &middot; Selangor, Malaysia</p>
+    <h1 class="callsign">SUNTERRESAA</h1>
+    <p class="tagline">Penetration tester at AirAsia, testing production web assets every week. I build the tooling I wanted to exist — <em>vapt.console</em>, which puts a sceptical reviewer between a scanner and an analyst’s time.</p>
+    <div id="typed"><span class="caret"></span></div>
+  </section>
+
+  <section class="pane" id="findings-sec">
+    <p class="eyebrow">Findings register</p>
+    <div class="f-head">
+      <div>SEV</div>
+      <div class="h-id">ID</div>
+      <div>TITLE</div>
+      <div class="ta-r">STATUS</div>
+    </div>
+    <ul class="findings" id="findings"></ul>
+    <noscript>
+      <p class="tagline">This register is rendered with JavaScript. With it disabled, reach me
+      through the contact links below.</p>
+    </noscript>
+  </section>
+
+  <section class="pane">
+    <p class="eyebrow">Console</p>
+    <div id="console">
+      <div id="log" role="log" aria-live="polite"></div>
+      <div class="prompt-row">
+        <span aria-hidden="true">&gt;</span>
+        <input id="cmd" type="text" autocomplete="off" autocapitalize="off"
+               autocorrect="off" spellcheck="false"
+               aria-label="Console command" placeholder="type help">
+      </div>
+    </div>
+  </section>
+
+  <section class="pane">
+    <p class="eyebrow">Contact</p>
+    <p class="tagline">Open to conversations about offensive security, vulnerability management, and the security of LLM pipelines. Authorised engagements only.</p>
+    <ul class="links">
+      <li><a href="mailto:sunterresa@gmail.com">email</a></li>
+      <li><a href="https://www.linkedin.com/in/sunterresaa-sankar" rel="noopener noreferrer me">linkedin</a></li>
+      <li><a href="https://github.com/Sr7nyx" rel="noopener noreferrer me">github</a></li>
+      <li><a href="/resume.pdf">resume</a></li>
+    </ul>
+    <hr class="rule">
+    <footer>No trackers &middot; No cookies &middot; CSP enforced &middot; Built 2026</footer>
+  </section>
+
+</div>
+
+<div class="glass grille"></div>
+<div class="glass hum"></div>
+<div class="glass vig"></div>
+
+<div id="boot" role="status" aria-live="polite"></div>
+<button id="skip" type="button">skip boot</button>
+
+<script src="/assets/app.js" defer></script>
+</body>
+</html>
