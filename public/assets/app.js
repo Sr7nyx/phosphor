@@ -290,43 +290,9 @@
         Projects modelled as findings. Edit this array; the
         markup builds itself.
      ======================================================== */
-  var FINDINGS = [
-    { s: 4, id: 'REG-001', title: 'vapt.console', status: 'live',
-      body: 'An AI-assisted workspace that takes an engagement from raw scanner output through triage to a client-ready report. The premise is not that it uses a model \u2014 it is that <b>the model is assumed wrong until proven otherwise</b>, and most of the build is the machinery that keeps it honest.<br><br>CVSS v3.1 base scores are <b>computed in code from the vector</b>; the model does not get to do the arithmetic, and when its severity disagrees with the computed band, that disagreement is surfaced rather than quietly resolved. Every piece of quoted evidence is <b>checked back against the source material</b> and labelled verified, partial or unverified, so fabricated proof is visible instead of shipped. A second reasoning-grade model then argues the sceptical case against the first one\u2019s finding \u2014 what benign explanation fits this same evidence?<br><br>Scanner output is treated as hostile input, because it is: it comes from a live target. Untrusted data is fenced with an unguessable delimiter and <b>prompt-injection attempts are surfaced as analyst intel</b> rather than obeyed. Five scanner dialects normalise into one schema offline. Priority blends CVSS with <b>EPSS and the CISA KEV catalog</b> so it tracks real exploitation rather than a severity label.',
-      meta: ['next.js', 'fastapi', 'postgres', 'openrouter', 'oauth'],
-      links: [
-        { l: 'live console', u: 'https://vapt-ai-assistant.vercel.app' },
-        { l: 'source',       u: 'https://github.com/Sr7nyx/vapt-ai-assistant' }
-      ] },
-
-    { s: 3, id: 'REG-002', title: 'AEVP \u2014 Agentic Exploit Validation Platform', status: 'in progress',
-      body: 'Current build. Tooling that tests whether an AI agent can actually be exploited \u2014 and can <b>prove it without asking another model to judge</b>.<br><br>Every result is backed by a deterministic oracle firing on a <b>128-bit cryptographically unique canary</b> with no benign path to any sink. Observing a canary anywhere is therefore proof the malicious path executed, not an inference about it. Each attack ships with a <b>benign twin</b> that must stay silent; if a twin ever fires, the run is invalid. That negative-control invariant is what lets the platform state a false-positive rate honestly, where LLM-judge tooling has been observed running around <b>78% false positives</b> in the wild.<br><br>The target is a deliberately vulnerable instrumented MCP server \u2014 the agentic DVWA that does not currently exist. Six seeded tools cover indirect injection through tool output, over-privileged identity, missing egress controls and cross-session memory poisoning, drawn from real 2026 engagement data. Campaigns report attack success rate with <b>Wilson confidence intervals</b>, so a result comes with its own uncertainty attached.',
-      meta: ['python', 'mcp', 'docker', 'oracles', 'wilson ci', 'owasp asi'],
-      // add when the repo is public:
-      // links: [{ l: 'source', u: 'https://github.com/Sr7nyx/aevp-range' }]
-      links: [] },
-
-    { s: 3, id: 'REG-003', title: 'Production testing at AirAsia', status: 'ongoing',
-      body: 'Weekly automated vulnerability assessment and manual web application testing against production assets, driven off active security tickets. I validate what the scanners raise, assign severity against business impact rather than default scanner ratings, and work with the IT and application teams through patching, configuration fixes and retest.<br><br>The reporting side is half the job: vulnerability reports, ticket lifecycle, and remediation KPIs that show whether risk is actually going down.',
-      meta: ['burp suite', 'nessus', 'cvss v3.1', 'remediation tracking'],
-      links: [] },
-
-    { s: 2, id: 'REG-004', title: 'Access governance and hardening review', status: 'closed',
-      body: 'Six months of information security compliance work at a licensed financial services provider. <b>Privileged access reviews in BeyondTrust</b>, CIS Benchmark and server hardening reviews to find configuration drift, and log, patch and security-metric monitoring feeding risk and remediation tracking.<br><br>The reason it sits in this register: governance work is where you learn why findings do not get fixed. That changes how you write them.',
-      meta: ['beyondtrust', 'cis benchmarks', 'pam', 'audit readiness'],
-      links: [] },
-
-    { s: 2, id: 'REG-005', title: 'DocuChain', status: 'shipped',
-      body: 'Final year project. A document verification system on Ethereum, using <b>IPFS for storage and smart contracts for the verification logic</b>, with MetaMask authentication and role-based access, tested against Ganache.<br><br>Building the contracts is where the trust boundary of a decentralised app stops being theory \u2014 on-chain logic is public, immutable and adversarially readable by default.',
-      meta: ['solidity', 'ethereum', 'ipfs', 'react', 'express'],
-      // links: [{ l: 'source', u: 'https://github.com/Sr7nyx/docuchain' }]
-      links: [] },
-
-    { s: 1, id: 'REG-006', title: 'Making a machine\u2019s claims checkable', status: 'ongoing',
-      body: 'The thread running through both tools, stated plainly. A model asserting something is not evidence that the thing is true, and most security tooling built on LLMs quietly skips that distinction.<br><br><b>vapt.console</b> answers it by grounding: quoted evidence is checked back against the source text, CVSS is recomputed from the vector rather than trusted, and a disagreement between the model and the arithmetic is surfaced instead of smoothed over. <b>AEVP</b> answers it by construction: an oracle fires on a canary that has no benign path to exist, so the proof does not depend on anyone\u2019s judgement, mine or a model\u2019s.<br><br>The same discipline applies in the other direction. Evidence from a live target is <b>attacker-controlled input</b> \u2014 it will try to steer the model. vapt.console fences untrusted data behind an unguessable random delimiter and reports <b>prompt-injection indicators as analyst-facing intel</b> rather than silently obeying them.',
-      meta: ['evidence grounding', 'prompt injection', 'owasp llm top 10', 'owasp asi'],
-      links: [] }
-  ];
+  var DATA = window.PHOSPHOR || {};
+  var FINDINGS = DATA.findings || [];
+  var DEMOS = DATA.demos || [];
 
   var BLOCK = ['\u2591', '\u2592', '\u2593', '\u2588'];
 
@@ -375,14 +341,7 @@
   function startTyping() {
     var el = document.getElementById('typed');
     if (!el) return;
-    var SEQ = [
-      '$ whoami',
-      '  sunterresaa sankar \u2014 penetration tester, airasia',
-      '$ focus --list',
-      '  web + api testing. vulnerability triage. llm pipeline security.',
-      '$ scope --status',
-      '  authorised targets only. always.'
-    ];
+    var SEQ = (DATA.hero && DATA.hero.typed) || [];
     if (REDUCE) {
       el.innerHTML = SEQ.map(function (l) {
         return '<div class="' + (l.charAt(0) === '$' ? 'p' : '') + '">' + l + '</div>';
@@ -477,21 +436,13 @@
     }
 
     var CMDS = {
-      help: function () { say('available: <span class="hot">whoami  findings  scan  stack  contact  clear</span>'); },
-      whoami: function () {
-        say('sunterresaa sankar \u2014 penetration tester, airasia');
-        say('bcs (hons) cybersecurity, multimedia university \u00b7 cgpa 3.60');
-        say('huawei hcia-security v4.0 \u00b7 hcia-ai v3.5');
+      help: function () {
+        say('available: <span class="hot">' + Object.keys(CMDS).sort().join('  ') + '</span>');
       },
       findings: function () {
         FINDINGS.forEach(function (f) {
           say(BLOCK[f.s - 1].repeat(3) + '  ' + f.id + '  ' + f.title + '  <span class="hot">' + f.status + '</span>');
         });
-      },
-      stack: function () {
-        say('burp suite \u00b7 nessus \u00b7 nmap \u00b7 zap \u00b7 metasploit \u00b7 wireshark \u00b7 beyondtrust');
-        say('python \u00b7 javascript \u00b7 react \u00b7 node \u00b7 solidity \u00b7 linux \u00b7 docker');
-        say('owasp top 10 + api top 10 \u00b7 owasp llm top 10 \u00b7 cvss v3.1 \u00b7 cis benchmarks');
       },
       contact: function () {
         say('email, linkedin, github and resume are below.');
@@ -512,20 +463,14 @@
           n++;
         }, 260);
       },
-      console: function () {
-        say('vapt.console \u2014 ai-assisted vapt workspace.');
-        say('premise: the model is assumed wrong until proven otherwise.');
-        say('deterministic cvss \u00b7 evidence grounding \u00b7 adversarial review');
-        say('prompt-injection fencing \u00b7 epss + kev priority. see <span class="hot">REG-001</span>.');
-      },
-      aevp: function () {
-        say('agentic exploit validation platform \u2014 in progress.');
-        say('deterministic oracles, not an llm judge. 128-bit canaries with');
-        say('no benign path to any sink. benign twins must stay silent or the');
-        say('run is void. see <span class="hot">REG-002</span>.');
-      },
       clear: function () { log.innerHTML = ''; }
     };
+
+    // project-specific commands live in content.js, not here
+    var EXTRA = DATA.commands || {};
+    Object.keys(EXTRA).forEach(function (k) {
+      CMDS[k] = function () { EXTRA[k].forEach(function (line) { say(line); }); };
+    });
 
     say('console ready. type <span class="hot">help</span> for commands.');
 
@@ -546,87 +491,37 @@
 
 
   /* ========================================================
-     6. PIPELINE REPLAY
-        A real vapt.console run over samples/zap-report.json.
-        CVSS figures below are computed v3.1 base scores, not
-        decoration - check them.
+     6. REPLAY PLAYER
+        Renders whatever is in PHOSPHOR.demos. Tabs appear
+        at two or more. Adding a demo needs no change here.
      ======================================================== */
-  (function replay() {
-    var btn = document.getElementById('rp-run');
-    var log = document.getElementById('rp-log');
-    var out = document.getElementById('rp-out');
-    var sum = document.getElementById('rp-sum');
-    var stages = [].slice.call(document.querySelectorAll('.rp-stage'));
-    if (!btn || !log || !out || !sum) return;
+  (function player() {
+    var wrap  = document.getElementById('replay');
+    var tabs  = document.getElementById('rp-tabs');
+    var head  = document.getElementById('rp-title');
+    var blurb = document.getElementById('rp-blurb');
+    var bar   = document.getElementById('rp-bar');
+    var log   = document.getElementById('rp-log');
+    var out   = document.getElementById('rp-out');
+    var sum   = document.getElementById('rp-sum');
+    var btn   = document.getElementById('rp-run');
+    var link  = document.getElementById('rp-link');
+    var sect  = document.getElementById('replay-sec');
+    if (!wrap || !DEMOS.length) { if (sect) sect.style.display = 'none'; return; }
 
-    var SCRIPT = [
-      { d: 0,   t: 'stage', i: 0 },
-      { d: 120, t: 'cmd',  x: '$ vapt import --format zap zap-report.json' },
-      { d: 620, t: 'dim',  x: '  reading OWASP ZAP JSON' },
-      { d: 480, t: 'dim',  x: '  normalising to unified schema' },
-      { d: 560, t: 'ok',   x: '  5 candidates  \u00b7  host vulnerable-demo.test' },
-      { d: 420, t: 'gap' },
+    var timers = [], stageEls = [], active = -1;
 
-      { d: 0,   t: 'stage', i: 1 },
-      { d: 200, t: 'cmd',  x: '$ vapt triage --prefilter' },
-      { d: 600, t: 'dim',  x: '  deterministic pass, no model calls spent here' },
-      { d: 620, t: 'drop', x: '  drop  Re-examine Cache-control Directives   informational' },
-      { d: 500, t: 'row',  s: 1, n: 'Re-examine Cache-control', w: 'informational \u00b7 pre-filter, no model call',
-                v: 'dropped', k: 'dropped' },
-      { d: 380, t: 'ok',   x: '  4 to triage  \u00b7  1 model call saved' },
-      { d: 420, t: 'gap' },
+    function stop() { timers.forEach(clearTimeout); timers = []; }
 
-      { d: 0,   t: 'stage', i: 2 },
-      { d: 200, t: 'cmd',  x: '$ vapt triage --lane main --lane review' },
-      { d: 560, t: 'dim',  x: '  [1/4] Cross Site Scripting (Reflected)   q   /catalog' },
-      { d: 520, t: 'dim',  x: '        cvss      AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N  \u2192  6.1 Medium' },
-      { d: 560, t: 'hot',  x: '        grounding VERIFIED \u2014 payload reflects verbatim in response' },
-      { d: 520, t: 'ok',   x: '        reviewer  Confirmed (high confidence)' },
-      { d: 300, t: 'row',  s: 3, n: 'Cross Site Scripting (Reflected)', w: 'evidence verified \u00b7 cvss 6.1 medium',
-                v: 'confirmed', k: 'confirmed' },
-      { d: 420, t: 'gap' },
-
-      { d: 200, t: 'dim',  x: '  [2/4] SQL Injection   format   /api/v1/reports/export' },
-      { d: 520, t: 'dim',  x: '        cvss      AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H  \u2192  9.8 Critical' },
-      { d: 520, t: 'dim',  x: '        scanner   confidence Medium' },
-      { d: 560, t: 'hot',  x: '        grounding PARTIAL \u2014 quoted count\":41827 present, no differential' },
-      { d: 560, t: 'ok',   x: '        reviewer  Needs More Evidence \u2014 boolean pair not demonstrated' },
-      { d: 300, t: 'row',  s: 4, n: 'SQL Injection', w: 'cvss 9.8 but proof incomplete \u00b7 verify by hand',
-                v: 'needs evidence', k: 'evidence' },
-      { d: 420, t: 'gap' },
-
-      { d: 200, t: 'dim',  x: '  [3/4] Content Security Policy Header Not Set   /' },
-      { d: 520, t: 'dim',  x: '        cvss      AV:N/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:N  \u2192  3.1 Low' },
-      { d: 600, t: 'hot',  x: '        SEVERITY MISMATCH \u2014 scanner said Medium, vector computes Low' },
-      { d: 520, t: 'ok',   x: '        reviewer  Likely Valid \u2014 severity corrected to Low' },
-      { d: 300, t: 'row',  s: 2, n: 'CSP Header Not Set', w: 'real, but medium \u2192 low on recompute',
-                v: 'corrected', k: 'confirmed' },
-      { d: 420, t: 'gap' },
-
-      { d: 200, t: 'dim',  x: '  [4/4] X-Content-Type-Options Missing   /assets/app.css' },
-      { d: 520, t: 'dim',  x: '        asset     static stylesheet, content-type already fixed' },
-      { d: 520, t: 'dim',  x: '        grounding NO EVIDENCE \u2014 nothing quoted to verify' },
-      { d: 560, t: 'ok',   x: '        reviewer  Likely False Positive \u2014 no sniffable content path' },
-      { d: 300, t: 'row',  s: 1, n: 'X-Content-Type-Options Missing', w: 'nosniff on a stylesheet \u00b7 no exploit path',
-                v: 'likely fp', k: 'fp' },
-      { d: 460, t: 'gap' },
-
-      { d: 0,   t: 'stage', i: 3 },
-      { d: 200, t: 'cmd',  x: '$ vapt report --qa' },
-      { d: 620, t: 'ok',   x: '  queue written  \u00b7  qa callouts attached' },
-      { d: 500, t: 'sum',  x: '5 in. <b>2 need a human now</b>, 1 filed at corrected severity, 2 off the queue.' }
-    ];
-
-    var timers = [];
-    function reset() {
-      timers.forEach(clearTimeout); timers = [];
+    function clearBoard() {
+      stop();
       log.innerHTML = ''; out.innerHTML = ''; sum.innerHTML = '';
-      stages.forEach(function (el) { el.className = 'rp-stage'; });
+      stageEls.forEach(function (el) { el.className = 'rp-stage'; });
     }
 
     function emit(step) {
       if (step.t === 'stage') {
-        stages.forEach(function (el, i) {
+        stageEls.forEach(function (el, i) {
           el.className = 'rp-stage' + (i < step.i ? ' done' : i === step.i ? ' on' : '');
         });
         return;
@@ -644,43 +539,93 @@
       }
       var d = document.createElement('div');
       d.className = step.t;
-      if (step.t === 'gap') { d.innerHTML = '&nbsp;'; }
-      else { d.textContent = step.x; }
+      if (step.t === 'gap') d.innerHTML = '&nbsp;';
+      else d.textContent = step.x;
       log.appendChild(d);
       log.scrollTop = log.scrollHeight;
     }
 
     function play(instant) {
-      reset();
+      var demo = DEMOS[active];
+      clearBoard();
       btn.disabled = true;
       btn.textContent = instant ? 'replay' : 'running';
       var at = 0;
-      SCRIPT.forEach(function (step) {
-        at += instant ? 0 : step.d;
+      demo.script.forEach(function (step) {
         if (instant) { emit(step); return; }
+        at += step.d;
         timers.push(setTimeout(function () { emit(step); }, at));
       });
-      var done = function () { btn.disabled = false; btn.textContent = 'replay'; };
-      if (instant) { done(); stages.forEach(function (el) { el.className = 'rp-stage done'; }); }
-      else { timers.push(setTimeout(function () {
-        stages.forEach(function (el) { el.className = 'rp-stage done'; }); done();
-      }, at + 400)); }
+      var finish = function () {
+        stageEls.forEach(function (el) { el.className = 'rp-stage done'; });
+        btn.disabled = false; btn.textContent = 'replay';
+      };
+      if (instant) finish();
+      else timers.push(setTimeout(finish, at + 400));
     }
 
+    function select(i, autoplay) {
+      if (i === active) return;
+      active = i;
+      var demo = DEMOS[i];
+
+      [].forEach.call(tabs.children, function (t, n) {
+        var on = n === i;
+        t.className = 'rp-tab' + (on ? ' on' : '');
+        t.setAttribute('aria-selected', String(on));
+        t.tabIndex = on ? 0 : -1;
+      });
+
+      head.textContent = demo.title;
+      blurb.innerHTML = demo.blurb;
+
+      bar.innerHTML = '';
+      stageEls = demo.stages.map(function (name) {
+        var el = document.createElement('span');
+        el.className = 'rp-stage';
+        el.textContent = name;
+        bar.appendChild(el);
+        return el;
+      });
+
+      if (demo.link) {
+        link.href = demo.link.u;
+        link.textContent = demo.link.l + ' \u2197';
+        link.hidden = false;
+      } else { link.hidden = true; }
+
+      clearBoard();
+      btn.textContent = 'run';
+      if (autoplay) play(REDUCE);
+    }
+
+    if (DEMOS.length > 1) {
+      DEMOS.forEach(function (demo, i) {
+        var t = document.createElement('button');
+        t.type = 'button'; t.className = 'rp-tab';
+        t.setAttribute('role', 'tab'); t.textContent = demo.tab;
+        t.addEventListener('click', function () { select(i, true); });
+        t.addEventListener('keydown', function (e) {
+          var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1;
+          if (n < 0 || n >= DEMOS.length) return;
+          e.preventDefault(); select(n, false); tabs.children[n].focus();
+        });
+        tabs.appendChild(t);
+      });
+    } else { tabs.hidden = true; }
+
+    select(0, false);
     btn.addEventListener('click', function () { play(REDUCE); });
 
     if (REDUCE) { play(true); return; }
-
     if ('IntersectionObserver' in window) {
       var fired = false;
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
           if (e.isIntersecting && !fired) { fired = true; io.disconnect(); play(false); }
         });
       }, { threshold: 0.3 });
-      io.observe(document.getElementById('replay'));
-    } else {
-      btn.textContent = 'run triage';
+      io.observe(wrap);
     }
   })();
 

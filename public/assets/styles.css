@@ -391,3 +391,20 @@ footer{
 .f-links a:focus-visible{ color:var(--signal); border-color:var(--signal); }
 .f-links a:hover i,
 .f-links a:focus-visible i{ opacity:1; }
+
+/* ---------- replay: demo tabs + header ---------- */
+.rp-tabs{ display:flex; flex-wrap:wrap; gap:var(--cell); margin-bottom:var(--cell); }
+.rp-tab{
+  background:none; border:0; border-bottom:1px solid var(--phosphor-ash);
+  color:var(--phosphor-dim); font:inherit; font-size:11px;
+  letter-spacing:.22em; text-transform:uppercase;
+  padding:.5rem 0; min-height:44px; cursor:pointer;
+  transition:color .12s, border-color .12s;
+}
+.rp-tab:hover{ color:var(--phosphor); }
+.rp-tab.on{ color:var(--signal); border-color:var(--signal); }
+.rp-title{
+  font-size:clamp(1rem,3vw,1.3rem); font-weight:400; margin:0 0 var(--cell);
+  color:var(--phosphor-hot);
+}
+.rp-link[hidden]{ display:none; }

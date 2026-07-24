@@ -57,28 +57,19 @@
 
 
   <section class="pane" id="replay-sec">
-    <p class="eyebrow">Pipeline replay</p>
-    <p class="tagline">A real run. Five findings from OWASP ZAP go in; two come out worth an
-    analyst&rsquo;s time. Every verdict below is what vapt.console actually produces.</p>
+    <p class="eyebrow">Replay</p>
+    <div id="rp-tabs" class="rp-tabs" role="tablist" aria-label="Choose a demo"></div>
+    <h2 id="rp-title" class="rp-title"></h2>
+    <p id="rp-blurb" class="tagline"></p>
 
     <div id="replay">
-      <div class="rp-bar" aria-hidden="true">
-        <span class="rp-stage" data-i="0">import</span>
-        <span class="rp-stage" data-i="1">pre-filter</span>
-        <span class="rp-stage" data-i="2">triage</span>
-        <span class="rp-stage" data-i="3">report</span>
-      </div>
-
+      <div class="rp-bar" id="rp-bar" aria-hidden="true"></div>
       <div id="rp-log" role="log" aria-live="polite"></div>
-
       <ul id="rp-out" class="rp-out"></ul>
-
       <div id="rp-sum" class="rp-sum"></div>
-
       <div class="rp-act">
-        <button id="rp-run" type="button">run triage</button>
-        <a class="rp-link" href="https://vapt-ai-assistant.vercel.app"
-           rel="noopener noreferrer">open the live console &#8599;</a>
+        <button id="rp-run" type="button">run</button>
+        <a class="rp-link" id="rp-link" href="#" target="_blank" rel="noopener noreferrer"></a>
       </div>
     </div>
   </section>
@@ -118,6 +109,7 @@
 <div id="boot" role="status" aria-live="polite"></div>
 <button id="skip" type="button">skip boot</button>
 
+<script src="/assets/content.js" defer></script>
 <script src="/assets/app.js" defer></script>
 </body>
 </html>
