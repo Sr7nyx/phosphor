@@ -26,8 +26,8 @@
   --void:        #070503;   /* the tube with the gun off - warm black, never #000 */
   --phosphor:    #FFA31A;   /* P3 amber, the working voltage */
   --phosphor-hot:#FFE3AE;   /* beam overdrive, near-white */
-  --phosphor-dim:#7A4A0E;   /* decayed trail, secondary text */
-  --phosphor-ash:#3A2409;   /* rules, inactive chrome */
+  --phosphor-dim:#B87A2A;   /* secondary text - 5.67:1 on void, AA */
+  --phosphor-ash:#3A2409;   /* BORDERS AND INACTIVE CHROME ONLY - 1.39:1, never text */
   --signal:      #4DE0D0;   /* cold cyan. LIVE + focus state ONLY */
   --burn:        #FF4520;   /* critical severity ONLY */
 
@@ -227,9 +227,9 @@ section{ padding-top:var(--gut); padding-bottom:var(--gut); }
 .f-body > div:first-child{ max-width:66ch; }
 .f-meta{
   margin-top:var(--cell); display:flex; flex-wrap:wrap; gap:var(--cell);
-  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--phosphor-ash);
+  font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--phosphor-dim);
 }
-.f-meta span{ color:var(--phosphor-dim); }
+.f-meta span{ color:var(--phosphor); opacity:.72; }
 
 /* ---------- console ---------- */
 #console{
@@ -264,7 +264,7 @@ section{ padding-top:var(--gut); padding-bottom:var(--gut); }
 .links a:hover{ color:var(--signal); border-color:var(--signal); }
 footer{
   padding:var(--gut) 0 max(var(--edge), env(safe-area-inset-bottom));
-  font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--phosphor-ash);
+  font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--phosphor-dim);
 }
 
 /* ---------- narrow ---------- */
@@ -317,7 +317,7 @@ footer{
 #rp-log .cmd{ color:var(--signal); }
 #rp-log .ok{ color:var(--phosphor); }
 #rp-log .hot{ color:var(--phosphor-hot); }
-#rp-log .drop{ color:var(--phosphor-ash); }
+#rp-log .drop{ color:var(--phosphor-dim); }
 #rp-log .gap{ min-height:calc(var(--cell)*.6); }
 
 .rp-out{ list-style:none; margin:var(--cell) 0 0; padding:0; }
@@ -330,12 +330,12 @@ footer{
   animation:wipe .2s ease-out;
 }
 .rp-out .rp-name{ color:var(--phosphor); }
-.rp-out .rp-why{ display:block; font-size:11px; color:var(--phosphor-ash); }
+.rp-out .rp-why{ display:block; font-size:11px; color:var(--phosphor-dim); }
 .rp-v{ text-align:right; font-size:10px; letter-spacing:.18em; text-transform:uppercase; }
 .rp-v[data-v="confirmed"]{ color:var(--phosphor-hot); text-shadow:0 0 10px rgba(255,163,26,.5); }
 .rp-v[data-v="evidence"] { color:var(--phosphor); }
 .rp-v[data-v="fp"]       { color:var(--phosphor-dim); }
-.rp-v[data-v="dropped"]  { color:var(--phosphor-ash); }
+.rp-v[data-v="dropped"]  { color:var(--phosphor-dim); }
 
 .rp-sum{
   margin-top:var(--cell); font-size:13px; color:var(--phosphor-hot);
