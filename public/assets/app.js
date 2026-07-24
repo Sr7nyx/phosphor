@@ -314,7 +314,7 @@
           '<div class="sev" data-s="' + f.s + '" aria-label="severity ' + f.s + ' of 4">' + BLOCK[f.s - 1].repeat(3) + '</div>' +
           '<div class="f-id">' + f.id + '</div>' +
           '<div class="f-title">' + f.title + '</div>' +
-          '<div class="f-status">' + f.status + '</div>' +
+          '<div class="f-status" data-st="' + f.status.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '">' + f.status + '</div>' +
         '</div>' +
         '<div class="f-body" id="b' + i + '">' +
           '<div>' + f.body + '</div>' +
