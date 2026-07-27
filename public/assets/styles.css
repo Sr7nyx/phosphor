@@ -97,7 +97,7 @@ body{
 /* ---------- lattice ---------- */
 .pane{
   position:relative; z-index:10;
-  max-width:82ch; margin:0 auto;
+  max-width:96ch; margin:0 auto;
   padding-left:var(--pad-l); padding-right:var(--pad-r);
 }
 section{ padding-top:var(--gut); padding-bottom:var(--gut); }
@@ -167,7 +167,7 @@ section{ padding-top:var(--gut); padding-bottom:var(--gut); }
 .tagline{
   margin:var(--cell) 0 0;
   font-size:clamp(.85rem,2.4vw,1.05rem);
-  font-weight:300; color:var(--phosphor); max-width:52ch;
+  font-weight:300; color:var(--phosphor); max-width:62ch;
 }
 .tagline em{ font-style:normal; color:var(--phosphor-hot); }
 #typed{
@@ -266,7 +266,7 @@ section{ padding-top:var(--gut); padding-bottom:var(--gut); }
 @keyframes wipe{ from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;} }
 .f-body b{ color:var(--phosphor); font-weight:500; }
 .f-body br + br{ line-height:var(--cell); }
-.f-body > div:first-child{ max-width:66ch; }
+.f-body > div:first-child{ max-width:74ch; }
 .f-meta{
   margin-top:var(--cell); display:flex; flex-wrap:wrap; gap:var(--cell);
   font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--phosphor-dim);
@@ -476,12 +476,36 @@ footer{
 .sk-items span{
   color:var(--phosphor); font-size:13px;
   position:relative; white-space:nowrap;
+  display:inline-block;
+  padding:.15em .1em;
+  transition:color .16s ease, transform .16s ease, text-shadow .16s ease;
+  cursor:default;
+}
+.sk-items span:hover{
+  color:var(--phosphor-hot);
+  transform:translateY(-2px);
+  text-shadow:0 0 2px rgba(255,227,174,.9),
+              0 0 12px rgba(255,163,26,.6),
+              0 0 26px rgba(255,120,0,.35);
 }
 .sk-items span:not(:last-child)::after{
   content:"\00B7"; color:var(--phosphor-ash);
-  margin-left:var(--cell); margin-left:calc(var(--cell) - .5ch);
+  margin-left:calc(var(--cell) - .5ch);
+  display:inline-block; transform:none;
+  text-shadow:none;
+}
+/* the separator must not inherit the hover lift or glow */
+.sk-items span:hover::after{
+  color:var(--phosphor-ash);
+  transform:none; text-shadow:none;
 }
 @media (max-width:640px){
   .sk-row{ grid-template-columns:1fr; gap:calc(var(--cell)*.4); }
   .sk-g{ color:var(--phosphor); }
+}
+
+/* skill bloom: keep the glow, drop the movement under reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .sk-items span{ transition:none; }
+  .sk-items span:hover{ transform:none; }
 }
