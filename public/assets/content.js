@@ -84,10 +84,24 @@ window.PHOSPHOR = {
     ]
   },
 
+  /* capability strip --------------------------------------
+     Flat, scannable, no icons. Grouped so a human reads it
+     and an ATS keyword-scanner ingests it. Edit freely.
+     ------------------------------------------------------ */
+  skills: [
+    { g: 'offensive',   items: ['web app pentest', 'api pentest', 'burp suite', 'nessus', 'nmap', 'zap', 'metasploit', 'wireshark'] },
+    { g: 'ai security', items: ['prompt-injection defense', 'evidence grounding', 'llm pipeline security', 'owasp llm top 10', 'owasp asi', 'mcp'] },
+    { g: 'triage',      items: ['cvss v3.1', 'epss', 'cisa kev', 'ssvc', 'owasp top 10', 'api top 10', 'cwe mapping'] },
+    { g: 'governance',  items: ['beyondtrust', 'cis benchmarks', 'server hardening', 'privileged access', 'audit readiness'] },
+    { g: 'build',       items: ['python', 'javascript', 'typescript', 'react', 'next.js', 'fastapi', 'node', 'solidity', 'docker', 'postgres', 'linux'] },
+    { g: 'certs',       items: ['hcia-security v4.0', 'hcia-ai v3.5', 'bcs (hons) cybersecurity'] }
+  ],
+
   /* register --------------------------------------------- */
   findings: [
 
     { s: 4, id: 'REG-001', title: 'vapt.console', status: 'live',
+      lead: '5 scanner dialects \u2192 1 schema \u00b7 CVSS computed in code \u00b7 evidence grounded against source',
       body: 'An AI-assisted workspace that takes an engagement from raw scanner output through triage to a client-ready report. The premise is not that it uses a model \u2014 it is that <b>the model is assumed wrong until proven otherwise</b>, and most of the build is the machinery that keeps it honest.<br><br>CVSS v3.1 base scores are <b>computed in code from the vector</b>; the model does not get to do the arithmetic, and when its severity disagrees with the computed band, that disagreement is surfaced rather than quietly resolved. Every piece of quoted evidence is <b>checked back against the source material</b> and labelled verified, partial or unverified, so fabricated proof is visible instead of shipped. A second reasoning-grade model then argues the sceptical case against the first one\u2019s finding \u2014 what benign explanation fits this same evidence?<br><br>Scanner output is treated as hostile input, because it is: it comes from a live target. Untrusted data is fenced with an unguessable delimiter and <b>prompt-injection attempts are surfaced as analyst intel</b> rather than obeyed. Five scanner dialects normalise into one schema offline. Priority blends CVSS with <b>EPSS and the CISA KEV catalog</b> so it tracks real exploitation rather than a severity label.',
       meta: ['next.js', 'fastapi', 'postgres', 'openrouter', 'oauth'],
       links: [
@@ -96,6 +110,7 @@ window.PHOSPHOR = {
       ] },
 
     { s: 3, id: 'REG-002', title: 'AEVP \u2014 Agentic Exploit Validation Platform', status: 'in progress',
+      lead: '0/48 benign twins fired \u00b7 oracle-proved, not LLM-judged \u00b7 vs ~78% FP in judge tooling',
       body: 'Current build. Tooling that tests whether an AI agent can actually be exploited \u2014 and can <b>prove it without asking another model to judge</b>.<br><br>Every result is backed by a deterministic oracle firing on a <b>128-bit cryptographically unique canary</b> with no benign path to any sink. Observing a canary anywhere is therefore proof the malicious path executed, not an inference about it. Each attack ships with a <b>benign twin</b> that must stay silent; if a twin ever fires, the run is invalid. That negative-control invariant is what lets the platform state a false-positive rate honestly, where LLM-judge tooling has been observed running around <b>78% false positives</b> in the wild.<br><br>The target is a deliberately vulnerable instrumented MCP server \u2014 the agentic DVWA that does not currently exist. Six seeded tools cover indirect injection through tool output, over-privileged identity, missing egress controls and cross-session memory poisoning, drawn from real 2026 engagement data. Campaigns report attack success rate with <b>Wilson confidence intervals</b>, so a result comes with its own uncertainty attached.',
       meta: ['python', 'mcp', 'docker', 'oracles', 'wilson ci', 'owasp asi'],
       // add when the repo is public:
@@ -103,22 +118,26 @@ window.PHOSPHOR = {
       links: [] },
 
     { s: 3, id: 'REG-003', title: 'Production testing at AirAsia', status: 'ongoing',
+      lead: 'weekly VA + manual testing on production \u00b7 severity by business impact \u00b7 remediation tracked to close',
       body: 'Weekly automated vulnerability assessment and manual web application testing against production assets, driven off active security tickets. I validate what the scanners raise, assign severity against business impact rather than default scanner ratings, and work with the IT and application teams through patching, configuration fixes and retest.<br><br>The reporting side is half the job: vulnerability reports, ticket lifecycle, and remediation KPIs that show whether risk is actually going down.',
       meta: ['burp suite', 'nessus', 'cvss v3.1', 'remediation tracking'],
       links: [] },
 
     { s: 2, id: 'REG-004', title: 'Access governance and hardening review', status: 'closed',
+      lead: '6 months FSI compliance \u00b7 privileged-access reviews \u00b7 CIS hardening + config-drift tracking',
       body: 'Six months of information security compliance work at a licensed financial services provider. <b>Privileged access reviews in BeyondTrust</b>, CIS Benchmark and server hardening reviews to find configuration drift, and log, patch and security-metric monitoring feeding risk and remediation tracking.<br><br>The reason it sits in this register: governance work is where you learn why findings do not get fixed. That changes how you write them.',
       meta: ['beyondtrust', 'cis benchmarks', 'pam', 'audit readiness'],
       links: [] },
 
     { s: 2, id: 'REG-005', title: 'DocuChain', status: 'shipped',
+      lead: 'Ethereum + IPFS \u00b7 smart-contract verification logic \u00b7 MetaMask auth + role-based access',
       body: 'Final year project. A document verification system on Ethereum, using <b>IPFS for storage and smart contracts for the verification logic</b>, with MetaMask authentication and role-based access, tested against Ganache.<br><br>Building the contracts is where the trust boundary of a decentralised app stops being theory \u2014 on-chain logic is public, immutable and adversarially readable by default.',
       meta: ['solidity', 'ethereum', 'ipfs', 'react', 'express'],
       // links: [{ l: 'source', u: 'https://github.com/Sr7nyx/docuchain' }]
       links: [] },
 
     { s: 1, id: 'REG-006', title: 'Making a machine\u2019s claims checkable', status: 'ongoing',
+      lead: 'the thesis behind both tools \u00b7 a model asserting != proof \u00b7 grounding + oracles close the gap',
       body: 'The thread running through both tools, stated plainly. A model asserting something is not evidence that the thing is true, and most security tooling built on LLMs quietly skips that distinction.<br><br><b>vapt.console</b> answers it by grounding: quoted evidence is checked back against the source text, CVSS is recomputed from the vector rather than trusted, and a disagreement between the model and the arithmetic is surfaced instead of smoothed over. <b>AEVP</b> answers it by construction: an oracle fires on a canary that has no benign path to exist, so the proof does not depend on anyone\u2019s judgement, mine or a model\u2019s.<br><br>The same discipline applies in the other direction. Evidence from a live target is <b>attacker-controlled input</b> \u2014 it will try to steer the model. vapt.console fences untrusted data behind an unguessable random delimiter and reports <b>prompt-injection indicators as analyst-facing intel</b> rather than silently obeying them.',
       meta: ['evidence grounding', 'prompt injection', 'owasp llm top 10', 'owasp asi'],
       links: [] }

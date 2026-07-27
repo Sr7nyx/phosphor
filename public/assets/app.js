@@ -317,6 +317,7 @@
           '<div class="f-status" data-st="' + f.status.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '">' + f.status + '</div>' +
         '</div>' +
         '<div class="f-body" id="b' + i + '">' +
+          (f.lead ? '<div class="f-lead">' + f.lead + '</div>' : '') +
           '<div>' + f.body + '</div>' +
           '<div class="f-meta">' + f.meta.map(function (m) { return '<span>' + m + '</span>'; }).join('') + '</div>' +
           linkRow(f.links) +
@@ -334,6 +335,21 @@
     });
   })();
 
+
+  (function buildSkills() {
+    var host = document.getElementById('skills');
+    var sect = document.getElementById('skills-sec');
+    var groups = DATA.skills || [];
+    if (!host) return;
+    if (!groups.length) { if (sect) sect.style.display = 'none'; return; }
+    host.innerHTML = groups.map(function (grp) {
+      return '<div class="sk-row">' +
+        '<div class="sk-g">' + grp.g + '</div>' +
+        '<div class="sk-items">' +
+          grp.items.map(function (it) { return '<span>' + it + '</span>'; }).join('') +
+        '</div></div>';
+    }).join('');
+  })();
 
   /* ========================================================
      3. HERO TYPE-ON

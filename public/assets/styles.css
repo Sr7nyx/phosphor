@@ -450,3 +450,38 @@ footer{
   color:var(--phosphor-hot);
 }
 .rp-link[hidden]{ display:none; }
+
+/* ---------- lead metric on a finding ---------- */
+.f-lead{
+  color:var(--phosphor-hot);
+  font-weight:500; font-size:12px;
+  letter-spacing:.04em;
+  margin-bottom:var(--cell);
+  padding-bottom:calc(var(--cell)*.6);
+  border-bottom:1px solid var(--phosphor-ash);
+}
+
+/* ---------- capability strip ---------- */
+.skills{ display:flex; flex-direction:column; gap:var(--cell); }
+.sk-row{
+  display:grid; grid-template-columns:12ch 1fr; gap:var(--cell);
+  align-items:baseline;
+  padding-bottom:var(--cell); border-bottom:1px solid var(--phosphor-ash);
+}
+.sk-g{
+  font-size:10px; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--phosphor-dim);
+}
+.sk-items{ display:flex; flex-wrap:wrap; gap:.5ch var(--cell); }
+.sk-items span{
+  color:var(--phosphor); font-size:13px;
+  position:relative; white-space:nowrap;
+}
+.sk-items span:not(:last-child)::after{
+  content:"\00B7"; color:var(--phosphor-ash);
+  margin-left:var(--cell); margin-left:calc(var(--cell) - .5ch);
+}
+@media (max-width:640px){
+  .sk-row{ grid-template-columns:1fr; gap:calc(var(--cell)*.4); }
+  .sk-g{ color:var(--phosphor); }
+}
