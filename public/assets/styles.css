@@ -549,32 +549,55 @@ footer{
 
 
 /* ---------- career trace: a boot log, not a dotted line ---------- */
-.trace{ list-style:none; margin:var(--gut) 0 0; padding:0; counter-reset:tr; }
+.trace{
+  list-style:none; margin:var(--gut) 0 0; padding:0;
+  position:relative; margin-left:.5ch;
+}
+/* dim static track down the whole column */
+.trace::before{
+  content:""; position:absolute; left:0; top:0; bottom:0;
+  width:1px; background:var(--phosphor-ash);
+}
+/* bright beam that fills from the top as you scroll toward 'now' */
+.trace::after{
+  content:""; position:absolute; left:-1px; top:0;
+  width:3px; height:var(--fill, 0%);
+  background:linear-gradient(to bottom,
+    var(--signal) 0%, var(--phosphor) 40%, var(--phosphor) 100%);
+  box-shadow:0 0 8px var(--phosphor);
+  transition:height .12s linear;
+  will-change:height;
+}
 .tr-row{
   display:grid;
   grid-template-columns:16ch 1fr 13ch;
   gap:var(--cell);
   align-items:baseline;
   padding:calc(var(--cell)*.55) 0;
-  border-left:1px solid var(--phosphor-ash);
   padding-left:var(--cell);
-  margin-left:.5ch;
   position:relative;
 }
 /* the beam dot on the rail */
 .tr-row::before{
   content:""; position:absolute; left:-4px; top:calc(var(--cell)*.9);
   width:7px; height:7px; border-radius:50%;
-  background:var(--phosphor-dim);
-  box-shadow:0 0 6px currentColor;
+  background:var(--phosphor-ash);
+  box-shadow:none;
+  transition:background .2s ease, box-shadow .2s ease;
 }
-.tr-row[data-state="boot"]::before{ background:var(--phosphor-ash); box-shadow:none; }
-.tr-row[data-state="active"]{ border-left-color:var(--phosphor); }
-.tr-row[data-state="active"]::before{
+/* the scroll beam has reached this row */
+.tr-row.lit::before{
+  background:var(--phosphor);
+  box-shadow:0 0 8px var(--phosphor);
+}
+.tr-row[data-state="active"].lit::before{
   background:var(--signal); color:var(--signal);
-  box-shadow:0 0 8px currentColor;
+  box-shadow:0 0 10px currentColor;
   animation:tr-beat 2.4s ease-in-out infinite;
 }
+/* text sits one notch back until the beam arrives */
+.tr-what{ transition:opacity .2s ease; }
+.tr-row:not(.lit) .tr-what{ opacity:.6; }
 @keyframes tr-beat{ 0%,100%{ transform:scale(1); opacity:.6 } 50%{ transform:scale(1.5); opacity:1 } }
 
 .tr-t{

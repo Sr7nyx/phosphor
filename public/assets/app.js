@@ -37,6 +37,7 @@
     // derive from a lightweight rotating value so consecutive loads differ.
     var order = ['amber', 'green', 'ice'];
     var pick = order[Math.floor(Math.random() * order.length)];
+    window.__reapplyTheme = function () { apply(pick); };
 
     if (mount) {
       THEMES.forEach(function (t, i) {
@@ -223,6 +224,16 @@
        rather than shipping one fixed resolution to every device. */
     var TINT = new Float32Array([1.0, 0.615, 0.10]);   // amber default
     window.__setFieldTint = function (r, g, b) { TINT[0] = r; TINT[1] = g; TINT[2] = b; };
+    // pull whatever theme CSS is already applied, so the very first frame
+    // is the right colour instead of the amber default flashing through.
+    (function seedTint() {
+      var v = getComputedStyle(document.documentElement).getPropertyValue('--field-tint').trim();
+      if (!v) return;
+      var p = v.split(',').map(parseFloat);
+      if (p.length === 3 && p.every(function (n) { return !isNaN(n); })) {
+        TINT[0] = p[0]; TINT[1] = p[1]; TINT[2] = p[2];
+      }
+    })();
 
     var scale    = COARSE ? 0.70 : 1.0;
     var MIN      = 0.45;
@@ -315,6 +326,8 @@
     function tick() { if (!queued && running) { queued = true; requestAnimationFrame(frame); } }
     tick();
     setTimeout(function () { cv.classList.add('lit'); }, 120);
+    // shader is live now; make sure the active theme's tint is in effect
+    if (window.__reapplyTheme) window.__reapplyTheme();
 
     /* Simple, honest frame-budget watchdog: sample real intervals for
        two seconds after load and drop the render scale once if needed. */
@@ -417,6 +430,36 @@
         '<span class="tr-when">' + r.when + '</span>' +
       '</li>';
     }).join('');
+
+    if (REDUCE) { host.style.setProperty('--fill', '100%'); return; }
+
+    var items = [].slice.call(host.querySelectorAll('.tr-row'));
+    var ticking = false;
+
+    function update() {
+      ticking = false;
+      var box = host.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      // 0 when the trace top hits mid-viewport, 1 when its bottom does
+      var anchor = vh * 0.62;
+      var span = box.height;
+      var travelled = anchor - box.top;
+      var frac = span > 0 ? Math.max(0, Math.min(1, travelled / span)) : 0;
+      host.style.setProperty('--fill', (frac * 100).toFixed(2) + '%');
+
+      // light each dot once the beam has reached its centre
+      var beamY = box.top + span * frac;
+      items.forEach(function (li) {
+        var r = li.getBoundingClientRect();
+        var dotY = r.top + Math.min(r.height, 48) * 0.5;
+        li.classList.toggle('lit', dotY <= beamY + 2);
+      });
+    }
+
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', onScroll, { passive: true });
+    update();
   })();
 
   /* ========================================================
