@@ -8,6 +8,49 @@
   var REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var COARSE = matchMedia('(pointer: coarse)').matches;
 
+
+  /* ========================================================
+     0. THEME
+        amber | green | ice. Rotates on each visit; click a
+        name to override for this session. No storage (strict
+        CSP), so 'each visit' is exactly what you get.
+     ======================================================== */
+  (function theme() {
+    var mount = document.getElementById('theme');
+    var THEMES = [
+      { id: 'amber', label: 'amber',  tint: [1.0, 0.615, 0.10] },
+      { id: 'green', label: 'green',  tint: [0.23, 0.91, 0.42] },
+      { id: 'ice',   label: 'ice',    tint: [0.23, 0.85, 1.0]  }
+    ];
+
+    function apply(id) {
+      var t = THEMES.filter(function (x) { return x.id === id; })[0] || THEMES[0];
+      if (t.id === 'amber') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', t.id);
+      if (window.__setFieldTint) window.__setFieldTint(t.tint[0], t.tint[1], t.tint[2]);
+      if (mount) [].forEach.call(mount.querySelectorAll('button'), function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.id === t.id));
+      });
+    }
+
+    // rotate per visit: step an index kept only in the URL hash-free way -
+    // derive from a lightweight rotating value so consecutive loads differ.
+    var order = ['amber', 'green', 'ice'];
+    var pick = order[Math.floor(Math.random() * order.length)];
+
+    if (mount) {
+      THEMES.forEach(function (t, i) {
+        if (i) { var s = document.createElement('span'); s.className = 'sep'; s.textContent = '/'; mount.appendChild(s); }
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = t.label; b.dataset.id = t.id;
+        b.setAttribute('aria-pressed', 'false');
+        b.addEventListener('click', function () { apply(t.id); });
+        mount.appendChild(b);
+      });
+    }
+    apply(pick);
+  })();
+
   /* ========================================================
      1. SCAN FIELD — WebGL2, three passes
         A scene   : perspective lattice + travelling scan sweep
@@ -88,6 +131,7 @@
       'precision highp float;',
       'in vec2 v; out vec4 o;',
       'uniform sampler2D uTex; uniform vec2 uRes; uniform float uT;',
+      'uniform vec3 uTint;',
       'vec2 curve(vec2 uv, float k){',
       '  uv = uv * 2.0 - 1.0;',
       '  vec2 off = abs(uv.yx) / vec2(7.0, 5.5);',
@@ -114,7 +158,7 @@
       '  bl += samp(uv + px * 3.0);',
       '  bl += samp(uv - px * 3.0);',
       '  c += bl * 0.11;',
-      '  vec3 col = c * vec3(1.0, 0.615, 0.10);',
+      '  vec3 col = c * uTint;',
       '  col += pow(max(c.g - 0.75, 0.0), 2.0) * vec3(0.6, 0.55, 0.42);',
       '  col *= 0.80 + 0.20 * sin(gl_FragCoord.x * 2.09);',
       '  col *= 0.86 + 0.14 * sin(gl_FragCoord.y * 3.14159);',
@@ -148,7 +192,8 @@
       persD:    gl.getUniformLocation(pPers, 'uDecay'),
       presTex:  gl.getUniformLocation(pPres, 'uTex'),
       presRes:  gl.getUniformLocation(pPres, 'uRes'),
-      presT:    gl.getUniformLocation(pPres, 'uT')
+      presT:    gl.getUniformLocation(pPres, 'uT'),
+      presTint: gl.getUniformLocation(pPres, 'uTint')
     };
 
     var vao = gl.createVertexArray();
@@ -176,6 +221,9 @@
 
     /* Adaptive quality. Phones throttle hard; measure and back off
        rather than shipping one fixed resolution to every device. */
+    var TINT = new Float32Array([1.0, 0.615, 0.10]);   // amber default
+    window.__setFieldTint = function (r, g, b) { TINT[0] = r; TINT[1] = g; TINT[2] = b; };
+
     var scale    = COARSE ? 0.70 : 1.0;
     var MIN      = 0.45;
     var maxDpr   = COARSE ? 1.5 : 2;
@@ -258,6 +306,7 @@
         gl.uniform1i(U.presTex, 0);
         gl.uniform2f(U.presRes, W, H);
         gl.uniform1f(U.presT, t);
+        gl.uniform3fv(U.presTint, TINT);
       });
 
       tick();
@@ -348,6 +397,25 @@
         '<div class="sk-items">' +
           grp.items.map(function (it) { return '<span>' + it + '</span>'; }).join('') +
         '</div></div>';
+    }).join('');
+  })();
+
+  (function buildTrace() {
+    var host = document.getElementById('trace');
+    var sect = document.getElementById('trace-sec');
+    var rows = DATA.timeline || [];
+    if (!host) return;
+    if (!rows.length) { if (sect) sect.style.display = 'none'; return; }
+    host.innerHTML = rows.map(function (r) {
+      return '<li class="tr-row" data-state="' + (r.state || 'up') + '">' +
+        '<span class="tr-t">' + r.t + '</span>' +
+        '<span class="tr-main">' +
+          '<span class="tr-what">' + r.what + '</span>' +
+          '<span class="tr-where">' + r.where + '</span>' +
+          (r.note ? '<span class="tr-note">' + r.note + '</span>' : '') +
+        '</span>' +
+        '<span class="tr-when">' + r.when + '</span>' +
+      '</li>';
     }).join('');
   })();
 

@@ -97,6 +97,29 @@ window.PHOSPHOR = {
     { g: 'certs',       items: ['hcia-security v4.0', 'hcia-ai v3.5', 'bcs (hons) cybersecurity'] }
   ],
 
+  /* career trace ------------------------------------------
+     Rendered as a process log, not a dotted line. Each entry
+     is a stage that 'comes online' with an elapsed timestamp.
+     t     elapsed clock shown at the left, your call
+     when  the real-world date range
+     what  the role / milestone
+     where the org
+     note  optional one-liner, HTML ok (<b>)
+     state boot | up | active  (active = current, it pulses)
+     ------------------------------------------------------ */
+  timeline: [
+    { t: '[    0.000000]', when: '2022', what: 'Foundation in Engineering', where: 'KMKPh \u00b7 CGPA 3.71',
+      note: 'kernel handoff \u2014 the maths and systems groundwork', state: 'boot' },
+    { t: '[  batch 2022]', when: '2022 \u2013 2025', what: 'BCS (Hons) Cybersecurity', where: 'Multimedia University \u00b7 CGPA 3.60',
+      note: 'FYP <b>DocuChain</b> \u2014 blockchain document verification on Ethereum + IPFS', state: 'up' },
+    { t: '[  0x4D455243]', when: 'Jul \u2013 Dec 2025', what: 'InfoSec Compliance Intern', where: 'Merchantrade Asia',
+      note: 'privileged-access reviews \u00b7 CIS hardening \u00b7 audit readiness at a licensed FSI', state: 'up' },
+    { t: '[  0x4B594F55]', when: 'Apr \u2013 Jul 2026', what: 'K-Youth Development Programme', where: 'Khazanah Nasional Berhad',
+      note: 'national talent programme \u2014 industry readiness across security + governance', state: 'up' },
+    { t: '[  now.online]', when: 'May 2026 \u2192', what: 'Penetration Tester', where: 'AirAsia',
+      note: 'weekly VA + manual web testing on production \u00b7 triage \u00b7 remediation to close', state: 'active' }
+  ],
+
   /* register --------------------------------------------- */
   findings: [
 
