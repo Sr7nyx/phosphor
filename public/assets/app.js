@@ -76,14 +76,15 @@
     var SCENE = ['#version 300 es',
       'precision highp float;',
       'in vec2 v; out vec4 o;',
-      'uniform vec2 uRes; uniform float uT;',
+      'uniform vec2 uRes; uniform float uT; uniform float uVel; uniform float uFx;',
       'float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }',
       'void main(){',
       '  vec2 p = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;',
       '  float horizon = 0.10;',
       '  float I = 0.0;',
       '  float scroll = uT * 0.55;',
-      '  float sweepZ = scroll + mod(uT * 7.0, 62.0) + 1.5;',
+      '  float beamRate = 7.0 + (uFx > 1.5 && uFx < 2.5 ? uVel * 26.0 : 0.0);',
+      '  float sweepZ = scroll + mod(uT * beamRate, 62.0) + 1.5;',
       '  if(p.y < horizon){',
       '    float d = 1.0 / (horizon - p.y);',
       '    vec2  g = vec2(p.x * d * 0.9, d + scroll);',
@@ -131,7 +132,7 @@
     var PRESENT = ['#version 300 es',
       'precision highp float;',
       'in vec2 v; out vec4 o;',
-      'uniform sampler2D uTex; uniform vec2 uRes; uniform float uT;',
+      'uniform sampler2D uTex; uniform vec2 uRes; uniform float uT; uniform float uVel; uniform float uFx;',
       'uniform vec3 uTint;',
       'vec2 curve(vec2 uv, float k){',
       '  uv = uv * 2.0 - 1.0;',
@@ -145,11 +146,17 @@
       '}',
       'float hash(vec2 p){ return fract(sin(dot(p, vec2(12.99, 78.23))) * 43758.5453); }',
       'void main(){',
-      '  float r = samp(curve(v, 1.02));',
-      '  float g = samp(curve(v, 1.00));',
-      '  float b = samp(curve(v, 0.98));',
+      '  vec2 vv = v;',
+      '  if(uFx > 2.5){',                                   // sync-tear
+      '    float band = step(0.5, fract(vv.y * 3.0 - uT * 1.3));',
+      '    float tear = uVel * uVel * 0.18 * band;',
+      '    vv.x = fract(vv.x + tear);',
+      '  }',
+      '  float r = samp(curve(vv, 1.02));',
+      '  float g = samp(curve(vv, 1.00));',
+      '  float b = samp(curve(vv, 0.98));',
       '  vec3  c = vec3(r, g, b);',
-      '  vec2 uv = curve(v, 1.0);',
+      '  vec2 uv = curve(vv, 1.0);',
       '  vec2 px = 2.5 / uRes;',
       '  float bl = 0.0;',
       '  bl += samp(uv + vec2( px.x, 0.0));',
@@ -159,11 +166,13 @@
       '  bl += samp(uv + px * 3.0);',
       '  bl += samp(uv - px * 3.0);',
       '  c += bl * 0.11;',
-      '  vec3 col = c * uTint;',
+      '  float vb = (uFx > 0.5 && uFx < 1.5) ? uVel : 0.0;',
+      '  vec3 col = c * uTint * (1.0 + vb * 0.55);',
       '  col += pow(max(c.g - 0.75, 0.0), 2.0) * vec3(0.6, 0.55, 0.42);',
       '  col *= 0.80 + 0.20 * sin(gl_FragCoord.x * 2.09);',
       '  col *= 0.86 + 0.14 * sin(gl_FragCoord.y * 3.14159);',
-      '  col += (hash(gl_FragCoord.xy + fract(uT) * 91.7) - 0.5) * 0.030;',
+      '  col += (hash(gl_FragCoord.xy + fract(uT) * 91.7) - 0.5) * (0.030 + vb * 0.05);',
+      '  col *= 1.0 - vb * 0.10 * sin(gl_FragCoord.y * 0.7 + uT * 40.0);',
       '  float vg = pow(16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.22);',
       '  col *= clamp(vg, 0.0, 1.0);',
       '  o = vec4(max(col, 0.0), 1.0);',
@@ -188,13 +197,17 @@
     var U = {
       sceneRes: gl.getUniformLocation(pScene, 'uRes'),
       sceneT:   gl.getUniformLocation(pScene, 'uT'),
+      sceneVel: gl.getUniformLocation(pScene, 'uVel'),
+      sceneFx:  gl.getUniformLocation(pScene, 'uFx'),
       persS:    gl.getUniformLocation(pPers, 'uScene'),
       persP:    gl.getUniformLocation(pPers, 'uPrev'),
       persD:    gl.getUniformLocation(pPers, 'uDecay'),
       presTex:  gl.getUniformLocation(pPres, 'uTex'),
       presRes:  gl.getUniformLocation(pPres, 'uRes'),
       presT:    gl.getUniformLocation(pPres, 'uT'),
-      presTint: gl.getUniformLocation(pPres, 'uTint')
+      presTint: gl.getUniformLocation(pPres, 'uTint'),
+      presVel:  gl.getUniformLocation(pPres, 'uVel'),
+      presFx:   gl.getUniformLocation(pPres, 'uFx')
     };
 
     var vao = gl.createVertexArray();
@@ -222,7 +235,21 @@
 
     /* Adaptive quality. Phones throttle hard; measure and back off
        rather than shipping one fixed resolution to every device. */
-    var TINT = new Float32Array([1.0, 0.615, 0.10]);   // amber default
+    var VEL = 0;                 // smoothed scroll velocity, 0..1
+    var VEL_RAW = 0;             // last frame's target
+    var FX = 1;                  // 1 velocity-bloom | 2 beam-rate | 3 sync-tear | 0 off
+    window.__setFieldFx = function (n) { FX = n | 0; };
+    (function scrollVel(){
+      var lastY = window.pageYOffset || 0, lastT = performance.now();
+      addEventListener('scroll', function(){
+        var y = window.pageYOffset || 0, now = performance.now();
+        var dt = Math.max(16, now - lastT);
+        var v = Math.abs(y - lastY) / dt;            // px per ms
+        VEL_RAW = Math.min(1, v / 2.2);              // normalise; ~2.2px/ms saturates
+        lastY = y; lastT = now;
+      }, { passive: true });
+    })();
+        var TINT = new Float32Array([1.0, 0.615, 0.10]);   // amber default
     window.__setFieldTint = function (r, g, b) { TINT[0] = r; TINT[1] = g; TINT[2] = b; };
     // pull whatever theme CSS is already applied, so the very first frame
     // is the right colour instead of the amber default flashing through.
@@ -291,6 +318,9 @@
       if (!running) return;
 
       var t = (now - t0) / 1000 * (REDUCE ? 0.25 : 1);
+      VEL += (VEL_RAW - VEL) * 0.18;          // attack toward target
+      VEL_RAW *= 0.90;                        // target bleeds off when not scrolling
+      if (VEL < 0.001) VEL = 0;
 
       gl.bindVertexArray(vao);
       gl.viewport(0, 0, W, H);
@@ -299,6 +329,8 @@
       draw(pScene, function () {
         gl.uniform2f(U.sceneRes, W, H);
         gl.uniform1f(U.sceneT, t);
+        gl.uniform1f(U.sceneVel, VEL);
+        gl.uniform1f(U.sceneFx, FX);
       });
 
       var prev = acc[cur], next = acc[1 - cur]; cur = 1 - cur;
@@ -318,6 +350,8 @@
         gl.uniform2f(U.presRes, W, H);
         gl.uniform1f(U.presT, t);
         gl.uniform3fv(U.presTint, TINT);
+        gl.uniform1f(U.presVel, VEL);
+        gl.uniform1f(U.presFx, FX);
       });
 
       tick();
@@ -754,6 +788,52 @@
       }, { threshold: 0.3 });
       io.observe(wrap);
     }
+  })();
+
+
+  /* ========================================================
+     0b. EFFECT PICKER + SCROLL CUE
+     ======================================================== */
+  (function fxPicker() {
+    var mount = document.getElementById('fx');
+    var MODES = [
+      { id: 1, label: 'bloom' },
+      { id: 2, label: 'beam' },
+      { id: 3, label: 'tear' }
+    ];
+    var active = 1;
+    function apply(id) {
+      active = id;
+      if (window.__setFieldFx) window.__setFieldFx(id);
+      if (mount) [].forEach.call(mount.querySelectorAll('button'), function (b) {
+        b.setAttribute('aria-pressed', String(+b.dataset.id === id));
+      });
+    }
+    if (mount) {
+      MODES.forEach(function (m, i) {
+        if (i) { var s = document.createElement('span'); s.className = 'sep'; s.textContent = '/'; mount.appendChild(s); }
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = m.label; b.dataset.id = m.id;
+        b.setAttribute('aria-pressed', String(m.id === active));
+        b.addEventListener('click', function () { apply(m.id); });
+        mount.appendChild(b);
+      });
+    }
+    apply(active);
+  })();
+
+  (function scrollCue() {
+    var cue = document.getElementById('scrollcue');
+    if (!cue) return;
+    var gone = false;
+    function hide() {
+      if (gone) return; gone = true;
+      cue.classList.add('gone');
+      removeEventListener('scroll', onScroll);
+    }
+    function onScroll() { if ((window.pageYOffset || 0) > 40) hide(); }
+    addEventListener('scroll', onScroll, { passive: true });
+    setTimeout(function () { if (!gone) cue.classList.add('idle'); }, 6000);
   })();
 
   /* ========================================================
