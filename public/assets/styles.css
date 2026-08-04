@@ -659,21 +659,3 @@ html::-webkit-scrollbar{ display:none; }   /* WebKit / Blink */
   :root:not([data-motion="force"]) #scrollcue span{ animation:none; }
 }
 
-/* ---------- attack surface orb ---------- */
-.orb-wrap{
-  position:relative; width:100%;
-  height:clamp(320px, 56vh, 560px);
-  margin:var(--cell) 0 0;
-}
-#orb{
-  width:100%; height:100%; display:block;
-  cursor:crosshair; touch-action:manipulation;
-}
-.orb-hint{
-  margin:var(--cell) 0 0;
-  font-size:10px; letter-spacing:.24em; text-transform:uppercase;
-  color:var(--phosphor-dim);
-}
-@media (max-width:640px){
-  .orb-wrap{ height:clamp(260px, 44vh, 380px); }
-}
