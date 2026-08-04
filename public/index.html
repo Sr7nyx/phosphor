@@ -1,5 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- data-motion="force" makes the site render identically for everyone,
+     overriding the visitor's prefers-reduced-motion setting.
+     Delete that attribute to respect it again. Nothing else to change. -->
+<html lang="en" data-motion="force">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -41,6 +44,12 @@
     <p class="tagline">Penetration tester at AirAsia, testing production web assets every week. I build the tooling I wanted to exist — <em>vapt.console</em>, which puts a sceptical reviewer between a scanner and an analyst’s time.</p>
     <div id="typed"><span class="caret"></span></div>
     <div id="scrollcue" aria-hidden="true">scroll <span>↓</span></div>
+  </section>
+
+  <section class="pane" id="orb-sec">
+    <p class="eyebrow">Attack surface</p>
+    <div class="orb-wrap"><canvas id="orb" aria-label="Interactive attack surface"></canvas></div>
+    <p class="orb-hint">click the surface &mdash; it breaks where you hit it</p>
   </section>
 
   <section class="pane" id="findings-sec">
