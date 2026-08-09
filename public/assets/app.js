@@ -81,17 +81,24 @@
       'precision highp float;',
       'in vec2 v; out vec4 o;',
       'uniform vec2 uRes; uniform float uT; uniform float uVel; uniform float uFx;',
+      'uniform float uDense; uniform float uSweep; uniform float uHoriz;',
+      'uniform vec4 uSeg[30]; uniform float uSegN; uniform float uWire;',
+      'float segDist(vec2 p, vec2 a, vec2 b){',
+      '  vec2 pa = p - a, ba = b - a;',
+      '  float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-6), 0.0, 1.0);',
+      '  return length(pa - ba * h);',
+      '}',
       'float hash(vec2 p){ return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }',
       'void main(){',
       '  vec2 p = (gl_FragCoord.xy - 0.5*uRes) / uRes.y;',
-      '  float horizon = 0.10;',
+      '  float horizon = uHoriz;',
       '  float I = 0.0;',
       '  float scroll = uT * 0.55;',
-      '  float beamRate = 7.0 + (uFx > 1.5 && uFx < 2.5 ? uVel * 26.0 : 0.0);',
+      '  float beamRate = (7.0 + (uFx > 1.5 && uFx < 2.5 ? uVel * 26.0 : 0.0)) * uSweep;',
       '  float sweepZ = scroll + mod(uT * beamRate, 62.0) + 1.5;',
       '  if(p.y < horizon){',
       '    float d = 1.0 / (horizon - p.y);',
-      '    vec2  g = vec2(p.x * d * 0.9, d + scroll);',
+      '    vec2  g = vec2(p.x * d * 0.9, d + scroll) * uDense;',
       '    float fade = exp(-d * 0.055) * 0.95;',
       '    vec2  fr = abs(fract(g) - 0.5);',
       '    float lw = 0.014 + d * 0.0016;',
@@ -119,6 +126,17 @@
       '      horizon + 0.04 + hash(vec2(fi, 19.0)) * 0.34);',
       '    mp.x *= uRes.x / uRes.y * 0.5;',
       '    I += smoothstep(0.006, 0.0, length(p - mp)) * 0.5;',
+      '  }',
+      '  if(uWire > 0.01){',
+      '    float w = 0.0;',
+      '    for(int i = 0; i < 30; i++){',
+      '      if(float(i) >= uSegN) break;',
+      '      vec4 sg = uSeg[i];',
+      '      float d = segDist(p, sg.xy, sg.zw);',
+      '      w += smoothstep(0.0055, 0.0, d) * 0.85;',
+      '      w += smoothstep(0.030, 0.0, d) * 0.10;',
+      '    }',
+      '    I += w * uWire;',
       '  }',
       '  o = vec4(vec3(I), 1.0);',
       '}'].join('\n');
@@ -203,6 +221,12 @@
       sceneT:   gl.getUniformLocation(pScene, 'uT'),
       sceneVel: gl.getUniformLocation(pScene, 'uVel'),
       sceneFx:  gl.getUniformLocation(pScene, 'uFx'),
+      sceneDen: gl.getUniformLocation(pScene, 'uDense'),
+      sceneSwp: gl.getUniformLocation(pScene, 'uSweep'),
+      sceneHor: gl.getUniformLocation(pScene, 'uHoriz'),
+      sceneSeg: gl.getUniformLocation(pScene, 'uSeg'),
+      sceneSgN: gl.getUniformLocation(pScene, 'uSegN'),
+      sceneWir: gl.getUniformLocation(pScene, 'uWire'),
       persS:    gl.getUniformLocation(pPers, 'uScene'),
       persP:    gl.getUniformLocation(pPers, 'uPrev'),
       persD:    gl.getUniformLocation(pPers, 'uDecay'),
@@ -239,6 +263,82 @@
 
     /* Adaptive quality. Phones throttle hard; measure and back off
        rather than shipping one fixed resolution to every device. */
+    // section-aware field: the tube behaves differently per section
+    var MODE  = { dense: 1.0, sweep: 1.0, horiz: 0.10 };   // live, lerped
+    var TARGET= { dense: 1.0, sweep: 1.0, horiz: 0.10 };
+    var SECTIONS = {
+      'hero':         { dense: 1.00, sweep: 1.00, horiz: 0.10 },
+      'findings-sec': { dense: 1.55, sweep: 0.70, horiz: 0.07 },
+      'skills-sec':   { dense: 1.25, sweep: 1.20, horiz: 0.12 },
+      'trace-sec':    { dense: 0.80, sweep: 0.42, horiz: 0.03 },
+      'replay-sec':   { dense: 2.00, sweep: 1.60, horiz: 0.05 }
+    };
+    (function watchSections(){
+      var ids = Object.keys(SECTIONS);
+      function pickSection(){
+        var vh = innerHeight || 800, best = null, bestArea = 0;
+        ids.forEach(function(id){
+          var el = document.getElementById(id); if (!el) return;
+          var r = el.getBoundingClientRect();
+          var vis = Math.max(0, Math.min(vh, r.bottom) - Math.max(0, r.top));
+          if (vis > bestArea) { bestArea = vis; best = id; }
+        });
+        if (best) TARGET = SECTIONS[best];
+      }
+      addEventListener('scroll', pickSection, { passive: true });
+      addEventListener('resize', pickSection, { passive: true });
+      pickSection();
+    })();
+
+    /* Vector solid: an icosahedron stroked as line segments and drawn
+       INTO the scene pass, so it decays and blooms through the same
+       phosphor pipeline as everything else. Tektronix, not Three.js. */
+    var PHI = (1 + Math.sqrt(5)) / 2;
+    var VERTS = [], EDGES = [];
+    (function buildIco(){
+      var raw = [];
+      [-1,1].forEach(function(a){ [-PHI,PHI].forEach(function(b){
+        raw.push([0,a,b]); raw.push([a,b,0]); raw.push([b,0,a]);
+      });});
+      // dedupe + normalise
+      var seen = {};
+      raw.forEach(function(v){
+        var k = v.map(function(n){ return n.toFixed(4); }).join(',');
+        if (seen[k]) return; seen[k] = 1;
+        var L = Math.hypot(v[0], v[1], v[2]);
+        VERTS.push([v[0]/L, v[1]/L, v[2]/L]);
+      });
+      // shortest pairwise distance defines an edge
+      var min = Infinity, D = [];
+      for (var i = 0; i < VERTS.length; i++) for (var j = i+1; j < VERTS.length; j++) {
+        var d = Math.hypot(VERTS[i][0]-VERTS[j][0], VERTS[i][1]-VERTS[j][1], VERTS[i][2]-VERTS[j][2]);
+        D.push([i,j,d]); if (d < min) min = d;
+      }
+      D.forEach(function(e){ if (e[2] < min * 1.05) EDGES.push([e[0], e[1]]); });
+    })();
+    var SEG = new Float32Array(30 * 4);
+    var WIRE_ON = 1;
+
+    function projectWire(t) {
+      var cy = Math.cos(t * 0.23), sy = Math.sin(t * 0.23);
+      var cx = Math.cos(t * 0.17), sx = Math.sin(t * 0.17);
+      var asp = W / Math.max(H, 1);
+      var cxp = asp * 0.30, cyp = 0.26;               // sits upper-right of centre
+      var R = 0.115 + Math.sin(t * 0.7) * 0.004;      // slight breathe
+      var n = Math.min(EDGES.length, 30);
+      for (var i = 0; i < n; i++) {
+        for (var k = 0; k < 2; k++) {
+          var v = VERTS[EDGES[i][k]];
+          var x = v[0]*cy + v[2]*sy, z = -v[0]*sy + v[2]*cy;
+          var y = v[1]*cx - z*sx;   z = v[1]*sx + z*cx;
+          var pz = 1 / (2.6 - z);                     // weak perspective
+          SEG[i*4 + k*2]     = cxp + x * R * pz * 2.4;
+          SEG[i*4 + k*2 + 1] = cyp + y * R * pz * 2.4;
+        }
+      }
+      return n;
+    }
+
     var VEL = 0;                 // smoothed scroll velocity, 0..1
     var VEL_RAW = 0;             // last frame's target
     var FX = 1;                  // 1 velocity-bloom | 2 beam-rate | 3 sync-tear | 0 off
@@ -325,6 +425,9 @@
       VEL += (VEL_RAW - VEL) * 0.18;          // attack toward target
       VEL_RAW *= 0.90;                        // target bleeds off when not scrolling
       if (VEL < 0.001) VEL = 0;
+      MODE.dense += (TARGET.dense - MODE.dense) * 0.035;
+      MODE.sweep += (TARGET.sweep - MODE.sweep) * 0.035;
+      MODE.horiz += (TARGET.horiz - MODE.horiz) * 0.035;
 
       gl.bindVertexArray(vao);
       gl.viewport(0, 0, W, H);
@@ -335,6 +438,13 @@
         gl.uniform1f(U.sceneT, t);
         gl.uniform1f(U.sceneVel, VEL);
         gl.uniform1f(U.sceneFx, FX);
+        gl.uniform1f(U.sceneDen, MODE.dense);
+        gl.uniform1f(U.sceneSwp, MODE.sweep);
+        gl.uniform1f(U.sceneHor, MODE.horiz);
+        var segN = projectWire(t);
+        gl.uniform4fv(U.sceneSeg, SEG);
+        gl.uniform1f(U.sceneSgN, segN);
+        gl.uniform1f(U.sceneWir, WIRE_ON);
       });
 
       var prev = acc[cur], next = acc[1 - cur]; cur = 1 - cur;
@@ -838,6 +948,77 @@
     function onScroll() { if ((window.pageYOffset || 0) > 40) hide(); }
     addEventListener('scroll', onScroll, { passive: true });
     setTimeout(function () { if (!gone) cue.classList.add('idle'); }, 6000);
+  })();
+
+  /* ========================================================
+     8. DECODE ON SCROLL
+        Text resolves out of glyph noise as it enters view -
+        the tube redrawing a line, left to right. Only ever
+        touches elements whose content is plain text, so no
+        markup is destroyed.
+     ======================================================== */
+  (function decode() {
+    if (REDUCE || !('IntersectionObserver' in window)) return;
+
+    var SEL = ['.eyebrow', '.f-title', '.tr-what', '.rp-title', '.sk-g', '.callsign'];
+    var GLYPHS = '01<>[]{}/\\|=+*#%$&@?!:;~^ABCDEF0123456789';
+
+    function pick() { return GLYPHS.charAt((Math.random() * GLYPHS.length) | 0); }
+
+    function run(el) {
+      var final = el.textContent;
+      if (!final.trim()) return;
+      var n = final.length;
+      // resolve left-to-right: each char locks after its own threshold
+      var lock = [];
+      for (var i = 0; i < n; i++) lock.push(i * 0.55 + Math.random() * 6);
+      var maxLock = Math.max.apply(null, lock) + 3;
+      var frame = 0;
+
+      el.setAttribute('aria-label', final);   // screen readers get the real text
+      (function step() {
+        var out = '';
+        for (var i = 0; i < n; i++) {
+          var c = final.charAt(i);
+          if (c === ' ' || c === '\n') { out += c; continue; }
+          out += (frame >= lock[i]) ? c : pick();
+        }
+        el.textContent = out;
+        frame += 1;
+        if (frame <= maxLock) requestAnimationFrame(step);
+        else el.textContent = final;
+      })();
+    }
+
+    var targets = [];
+    SEL.forEach(function (sel) {
+      [].forEach.call(document.querySelectorAll(sel), function (el) {
+        // plain-text only: skip anything containing markup
+        if (el.children.length === 0 && el.textContent.trim()) targets.push(el);
+      });
+    });
+
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        io.unobserve(e.target);
+        run(e.target);
+      });
+    }, { threshold: 0.55, rootMargin: '0px 0px -8% 0px' });
+
+    targets.forEach(function (el) { io.observe(el); });
+
+    // findings and trace rows are built after this module runs;
+    // expose a hook so those renderers can register their own text.
+    window.__decodeWatch = function (root) {
+      SEL.forEach(function (sel) {
+        [].forEach.call((root || document).querySelectorAll(sel), function (el) {
+          if (el.children.length === 0 && el.textContent.trim() && !el.__dec) {
+            el.__dec = 1; io.observe(el);
+          }
+        });
+      });
+    };
   })();
 
   /* ========================================================

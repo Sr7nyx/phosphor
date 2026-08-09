@@ -659,3 +659,11 @@ html::-webkit-scrollbar{ display:none; }   /* WebKit / Blink */
   :root:not([data-motion="force"]) #scrollcue span{ animation:none; }
 }
 
+
+/* ---------- decode-on-scroll ---------- */
+/* Text is swapped char-by-char while resolving, so lock the box to
+   stop reflow, and keep the glyph noise from looking like a layout bug. */
+.f-title, .tr-what, .rp-title, .eyebrow, .sk-g{
+  font-variant-ligatures:none;
+  font-feature-settings:"liga" 0, "calt" 0;
+}
