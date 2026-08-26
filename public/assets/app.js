@@ -276,6 +276,14 @@
     (function watchSections(){
       var ids = Object.keys(SECTIONS);
       function pickSection(){
+        // paged mode: exactly one section is visible, so use that
+        if (document.documentElement.getAttribute('data-mode') === 'paged') {
+          for (var k = 0; k < ids.length; k++) {
+            var e = document.getElementById(ids[k]);
+            if (e && !e.hasAttribute('hidden')) { TARGET = SECTIONS[ids[k]]; return; }
+          }
+          return;
+        }
         var vh = innerHeight || 800, best = null, bestArea = 0;
         ids.forEach(function(id){
           var el = document.getElementById(id); if (!el) return;
@@ -285,6 +293,7 @@
         });
         if (best) TARGET = SECTIONS[best];
       }
+      addEventListener('hashchange', pickSection);
       addEventListener('scroll', pickSection, { passive: true });
       addEventListener('resize', pickSection, { passive: true });
       pickSection();
@@ -747,7 +756,9 @@
       CMDS[k] = function () { EXTRA[k].forEach(function (line) { say(line); }); };
     });
 
-    say('console ready. type <span class="hot">help</span> for commands.');
+    // teletext: any 3-digit page number jumps there
+    var origKeydown = null;
+    say('console ready. type <span class="hot">help</span>, or a page number (100-700).');
 
     cmd.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') return;
@@ -758,6 +769,11 @@
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
       });
       say('&gt; ' + safe, 'echo');
+      if (/^\d{3}$/.test(raw) && window.__gotoPage) {
+        say('\u2192 page ' + raw);
+        window.__gotoPage(raw);
+        return;
+      }
       if (Object.prototype.hasOwnProperty.call(CMDS, raw)) CMDS[raw]();
       else say(safe + ': not found. try <span class="hot">help</span>.');
     });
@@ -1052,6 +1068,7 @@
     function goto(id) {
       var el = document.getElementById(id);
       if (!el) return;
+      if (window.__goSection) { window.__goSection(id); return; }   // paged mode
       el.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
       // move focus for keyboard + screen-reader users without a visible jump
       el.setAttribute('tabindex', '-1');
@@ -1087,11 +1104,19 @@
     function update() {
       ticking = false;
       var vh = innerHeight || 800, best = -1, bestVis = 0;
-      KEYS.forEach(function (x, i) {
-        var r = document.getElementById(x.id).getBoundingClientRect();
-        var vis = Math.max(0, Math.min(vh, r.bottom) - Math.max(0, r.top));
-        if (vis > bestVis) { bestVis = vis; best = i; }
-      });
+      if (document.documentElement.getAttribute('data-mode') === 'paged') {
+        // exactly one page is visible; light its key
+        KEYS.forEach(function (x, i) {
+          var e = document.getElementById(x.id);
+          if (e && !e.hasAttribute('hidden')) best = i;
+        });
+      } else {
+        KEYS.forEach(function (x, i) {
+          var r = document.getElementById(x.id).getBoundingClientRect();
+          var vis = Math.max(0, Math.min(vh, r.bottom) - Math.max(0, r.top));
+          if (vis > bestVis) { bestVis = vis; best = i; }
+        });
+      }
       buttons.forEach(function (b, i) {
         b.classList.toggle('on', i === best);
         b.setAttribute('aria-current', i === best ? 'true' : 'false');
@@ -1106,8 +1131,15 @@
         } else { glow.classList.remove('lit'); }
       }
       var doc = document.documentElement;
-      var max = doc.scrollHeight - vh;
-      if (fill) fill.style.width = max > 0 ? ((doc.scrollTop / max) * 100).toFixed(2) + '%' : '0%';
+      if (fill) {
+        if (doc.getAttribute('data-mode') === 'paged') {
+          fill.style.width = best >= 0
+            ? (((best + 1) / KEYS.length) * 100).toFixed(1) + '%' : '0%';
+        } else {
+          var max = doc.scrollHeight - vh;
+          fill.style.width = max > 0 ? ((doc.scrollTop / max) * 100).toFixed(2) + '%' : '0%';
+        }
+      }
 
       // The module is small and centred now, so it no longer needs to get
       // out of the way on every scroll. It only hides while the hero is
@@ -1219,6 +1251,7 @@
      ======================================================== */
   (function parallax() {
     if (REDUCE) return;
+    if (document.documentElement.getAttribute('data-mode') === 'paged') return;
     var eyebrows = [].slice.call(document.querySelectorAll('.pane > .eyebrow'));
     var heroEl   = document.getElementById('hero');
     var callsign = document.querySelector('.callsign');
@@ -1344,6 +1377,113 @@
     }
     if (document.readyState === 'complete') audit();
     else addEventListener('load', function () { setTimeout(audit, 300); });
+  })();
+
+  /* ========================================================
+     13. PAGED TERMINAL
+         A VT220 does not scroll - it redraws. Sections become
+         screens; switching one collapses the tube to a line,
+         holds, then paints the new screen out from it.
+         Teletext addressing: 100 index, 200 register, etc.
+     ======================================================== */
+  (function paged() {
+    var pages = [].slice.call(document.querySelectorAll('section[data-page]'));
+    if (!pages.length) return;
+
+    var curtain = document.getElementById('curtain');
+    var pgnum   = document.getElementById('pgnum');
+    var tube    = document.getElementById('tube');
+    var idx     = 0, busy = false;
+
+    document.documentElement.setAttribute('data-mode', 'paged');
+
+    function numOf(i) { return pages[i].getAttribute('data-page'); }
+
+    function paint(i, instant) {
+      pages.forEach(function (s, n) {
+        var on = n === i;
+        s.classList.toggle('pg-on', on);
+        if (on) s.removeAttribute('hidden'); else s.setAttribute('hidden', '');
+      });
+      idx = i;
+      if (pgnum) pgnum.textContent = numOf(i);
+      history.replaceState(null, '', '#' + numOf(i));
+      var el = pages[i];
+      el.setAttribute('tabindex', '-1');
+      if (!instant) el.focus({ preventScroll: true });
+      scrollTo(0, 0);
+      // re-arm any per-section animation that expects a fresh entry
+      if (window.__decodeWatch) window.__decodeWatch(el);
+    }
+
+    function go(i) {
+      if (busy || i === idx || i < 0 || i >= pages.length) return;
+      if (REDUCE) { paint(i); return; }
+      busy = true;
+      // collapse to a line, hold, paint out
+      curtain.classList.add('collapse');
+      setTimeout(function () {
+        paint(i);
+        curtain.classList.remove('collapse');
+        curtain.classList.add('expand');
+        setTimeout(function () {
+          curtain.classList.remove('expand');
+          busy = false;
+        }, 260);
+      }, 210);
+    }
+
+    function byNumber(n) {
+      for (var i = 0; i < pages.length; i++) if (numOf(i) === String(n)) return i;
+      return -1;
+    }
+    window.__gotoPage = function (n) { var i = byNumber(n); if (i >= 0) go(i); };
+    window.__pageOfSection = function (id) {
+      for (var i = 0; i < pages.length; i++) if (pages[i].id === id) return i;
+      return -1;
+    };
+    window.__goSection = function (id) { var i = window.__pageOfSection(id); if (i >= 0) go(i); };
+
+    /* wheel + swipe still work - they page instead of scrolling, so the
+       instinct maps to the right outcome rather than doing nothing */
+    var wheelLock = 0;
+    addEventListener('wheel', function (e) {
+      var now = Date.now();
+      if (now - wheelLock < 700 || Math.abs(e.deltaY) < 12) return;
+      wheelLock = now;
+      go(idx + (e.deltaY > 0 ? 1 : -1));
+    }, { passive: true });
+
+    var ty = 0;
+    addEventListener('touchstart', function (e) { ty = e.touches[0].clientY; }, { passive: true });
+    addEventListener('touchend', function (e) {
+      var dy = ty - (e.changedTouches[0] || {}).clientY;
+      if (Math.abs(dy) > 70) go(idx + (dy > 0 ? 1 : -1));
+    }, { passive: true });
+
+    addEventListener('keydown', function (e) {
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); go(idx + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(idx - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); go(0); }
+      else if (e.key === 'End')  { e.preventDefault(); go(pages.length - 1); }
+    });
+
+    /* deep links keep working: #200 or #REG-002 */
+    function fromHash() {
+      var hh = (location.hash || '').replace('#', '');
+      if (/^\d{3}$/.test(hh)) { var i = byNumber(hh); if (i >= 0) { paint(i, true); return; } }
+      if (/^REG-\d+$/i.test(hh)) {
+        var f = window.__pageOfSection('findings-sec');
+        if (f >= 0) paint(f, true);
+        return;
+      }
+      paint(0, true);
+    }
+    addEventListener('hashchange', fromHash);
+    fromHash();
   })();
 
   /* ========================================================
