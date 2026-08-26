@@ -1407,11 +1407,13 @@
       });
       idx = i;
       if (pgnum) pgnum.textContent = numOf(i);
-      history.replaceState(null, '', '#' + numOf(i));
+      // sandboxed frames and opaque origins reject history writes; the
+      // page switch must not depend on the URL updating successfully
+      try { history.replaceState(null, '', '#' + numOf(i)); } catch (e) {}
       var el = pages[i];
       el.setAttribute('tabindex', '-1');
-      if (!instant) el.focus({ preventScroll: true });
-      scrollTo(0, 0);
+      if (!instant) { try { el.focus({ preventScroll: true }); } catch (e) {} }
+      try { scrollTo(0, 0); } catch (e) {}
       // re-arm any per-section animation that expects a fresh entry
       if (window.__decodeWatch) window.__decodeWatch(el);
     }
@@ -1420,17 +1422,19 @@
       if (busy || i === idx || i < 0 || i >= pages.length) return;
       if (REDUCE) { paint(i); return; }
       busy = true;
-      // collapse to a line, hold, paint out
-      curtain.classList.add('collapse');
+      // collapse to a line, hold, paint out. Every stage is guarded so a
+      // single failure can never leave the pager permanently locked.
+      if (curtain) curtain.classList.add('collapse');
       setTimeout(function () {
-        paint(i);
-        curtain.classList.remove('collapse');
-        curtain.classList.add('expand');
+        try { paint(i); } catch (e) {}
+        if (curtain) { curtain.classList.remove('collapse'); curtain.classList.add('expand'); }
         setTimeout(function () {
-          curtain.classList.remove('expand');
+          if (curtain) curtain.classList.remove('expand');
           busy = false;
         }, 260);
       }, 210);
+      // hard failsafe: never stay busy longer than the transition
+      setTimeout(function () { busy = false; }, 900);
     }
 
     function byNumber(n) {
