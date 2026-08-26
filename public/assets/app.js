@@ -1032,6 +1032,8 @@
     var nav  = document.getElementById('softkeys');
     var list = document.getElementById('sk-list');
     var fill = document.getElementById('sk-fill');
+    var panel = document.getElementById('sk-panel');
+    var glow  = document.getElementById('sk-glow');
     if (!nav || !list) return;
 
     // digits are the real shortcuts; shown as the key hint so the bar
@@ -1093,6 +1095,15 @@
         b.classList.toggle('on', i === best);
         b.setAttribute('aria-current', i === best ? 'true' : 'false');
       });
+      // the lit key spills light onto the surface under the panel
+      if (glow) {
+        if (best >= 0) {
+          var lb = buttons[best];
+          glow.style.left  = lb.offsetLeft + 'px';
+          glow.style.width = lb.offsetWidth + 'px';
+          glow.classList.add('lit');
+        } else { glow.classList.remove('lit'); }
+      }
       var doc = document.documentElement;
       var max = doc.scrollHeight - vh;
       if (fill) fill.style.width = max > 0 ? ((doc.scrollTop / max) * 100).toFixed(2) + '%' : '0%';
@@ -1113,6 +1124,33 @@
     addEventListener('scroll', onScroll, { passive: true });
     addEventListener('resize', onScroll, { passive: true });
     update();
+
+
+    /* The panel sits in the tube as an object. Tilt it toward the cursor
+       so it reads as physical rather than as a rectangle with a border.
+       Fine pointers only - on touch there is no cursor to track. */
+    if (panel && !REDUCE && matchMedia('(pointer: fine)').matches) {
+      var raf = false, mx = 0, my = 0;
+      addEventListener('mousemove', function (e) {
+        mx = e.clientX; my = e.clientY;
+        if (raf) return;
+        raf = true;
+        requestAnimationFrame(function () {
+          raf = false;
+          var r = panel.getBoundingClientRect();
+          var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          // normalise distance, clamp so it never becomes a novelty
+          var dx = Math.max(-1, Math.min(1, (mx - cx) / (innerWidth * 0.5)));
+          var dy = Math.max(-1, Math.min(1, (my - cy) / (innerHeight * 0.5)));
+          panel.style.setProperty('--tiltY', (dx * 5).toFixed(2) + 'deg');
+          panel.style.setProperty('--tiltX', (7 - dy * 4).toFixed(2) + 'deg');
+        });
+      }, { passive: true });
+      addEventListener('mouseleave', function () {
+        panel.style.setProperty('--tiltY', '0deg');
+        panel.style.setProperty('--tiltX', '7deg');
+      });
+    }
 
     /* deep links: #REG-002 opens that finding expanded */
     function openHash() {
