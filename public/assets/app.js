@@ -1097,11 +1097,16 @@
       var max = doc.scrollHeight - vh;
       if (fill) fill.style.width = max > 0 ? ((doc.scrollTop / max) * 100).toFixed(2) + '%' : '0%';
 
-      // retract on scroll-down, return on scroll-up (mobile breathing room)
-      var y = doc.scrollTop;
-      if (y > lastY + 6 && y > vh * 0.6) nav.classList.add('tuck');
-      else if (y < lastY - 6) nav.classList.remove('tuck');
-      lastY = y;
+      // The module is small and centred now, so it no longer needs to get
+      // out of the way on every scroll. It only hides while the hero is
+      // filling the screen, where it would compete with the callsign.
+      var heroEl = document.getElementById('hero');
+      if (heroEl) {
+        var hr = heroEl.getBoundingClientRect();
+        var heroDominant = hr.bottom > vh * 0.72;
+        nav.classList.toggle('tuck', heroDominant);
+      }
+      lastY = doc.scrollTop;
     }
     var lastY = 0;
     function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
