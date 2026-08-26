@@ -1,7 +1,7 @@
 {
   // Static-assets-only Worker. No Worker script, no build step.
   // Docs: https://developers.cloudflare.com/workers/static-assets/binding/
-  "name": "phosphor",
+  "name": "phosphor-portfolio",
   "compatibility_date": "2026-07-23",
   "assets": {
     "directory": "./public/"

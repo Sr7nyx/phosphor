@@ -1022,6 +1022,116 @@
   })();
 
   /* ========================================================
+     9. SOFTKEYS
+        A VT220 function-key row, not a navbar. F1-F6 work as
+        real keys; the active key lights with scroll position;
+        a hairline tracks total page progress. Also handles
+        deep links (#REG-002 opens that finding expanded).
+     ======================================================== */
+  (function softkeys() {
+    var nav  = document.getElementById('softkeys');
+    var list = document.getElementById('sk-list');
+    var fill = document.getElementById('sk-fill');
+    if (!nav || !list) return;
+
+    // digits are the real shortcuts; shown as the key hint so the bar
+    // documents itself honestly rather than promising F-keys that
+    // browsers reserve.
+    var KEYS = [
+      { k: '1', id: 'findings-sec', label: 'register' },
+      { k: '2', id: 'skills-sec',   label: 'caps'     },
+      { k: '3', id: 'trace-sec',    label: 'trace'    },
+      { k: '4', id: 'replay-sec',   label: 'replay'   },
+      { k: '5', id: 'contact-sec',  label: 'contact'  },
+      { k: '6', id: 'hero',         label: 'top'      }
+    ].filter(function (x) { return document.getElementById(x.id); });
+
+    function goto(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+      // move focus for keyboard + screen-reader users without a visible jump
+      el.setAttribute('tabindex', '-1');
+      el.focus({ preventScroll: true });
+    }
+
+    list.innerHTML = KEYS.map(function (x) {
+      return '<li><button type="button" data-id="' + x.id + '">' +
+             '<b>' + x.k + '</b> <span>' + x.label + '</span></button></li>';
+    }).join('');
+
+    [].forEach.call(list.querySelectorAll('button'), function (b) {
+      b.addEventListener('click', function () { goto(b.dataset.id); });
+    });
+
+    addEventListener('keydown', function (e) {
+      // don't steal keys while typing in the console
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // Number keys 1-6 are the real bindings. F5 is reload and F1 is help
+      // in most browsers - hijacking those is hostile, so the F-labels are
+      // the terminal fiction while the digits do the work.
+      var n = parseInt(e.key, 10);
+      if (n >= 1 && n <= KEYS.length) { e.preventDefault(); goto(KEYS[n - 1].id); return; }
+
+    });
+
+    /* active key + progress, throttled through rAF */
+    var buttons = [].slice.call(list.querySelectorAll('button'));
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var vh = innerHeight || 800, best = -1, bestVis = 0;
+      KEYS.forEach(function (x, i) {
+        var r = document.getElementById(x.id).getBoundingClientRect();
+        var vis = Math.max(0, Math.min(vh, r.bottom) - Math.max(0, r.top));
+        if (vis > bestVis) { bestVis = vis; best = i; }
+      });
+      buttons.forEach(function (b, i) {
+        b.classList.toggle('on', i === best);
+        b.setAttribute('aria-current', i === best ? 'true' : 'false');
+      });
+      var doc = document.documentElement;
+      var max = doc.scrollHeight - vh;
+      if (fill) fill.style.width = max > 0 ? ((doc.scrollTop / max) * 100).toFixed(2) + '%' : '0%';
+
+      // retract on scroll-down, return on scroll-up (mobile breathing room)
+      var y = doc.scrollTop;
+      if (y > lastY + 6 && y > vh * 0.6) nav.classList.add('tuck');
+      else if (y < lastY - 6) nav.classList.remove('tuck');
+      lastY = y;
+    }
+    var lastY = 0;
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', onScroll, { passive: true });
+    update();
+
+    /* deep links: #REG-002 opens that finding expanded */
+    function openHash() {
+      var h = (location.hash || '').replace('#', '');
+      if (!/^REG-\d+$/i.test(h)) return;
+      var rows = document.querySelectorAll('#findings .f-row');
+      [].forEach.call(rows, function (row) {
+        var idEl = row.querySelector('.f-id');
+        if (!idEl || idEl.textContent.trim().toUpperCase() !== h.toUpperCase()) return;
+        var body = document.getElementById(row.getAttribute('aria-controls'));
+        if (body && !body.classList.contains('open')) {
+          body.classList.add('open');
+          row.setAttribute('aria-expanded', 'true');
+        }
+        setTimeout(function () {
+          row.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'center' });
+        }, 60);
+      });
+    }
+    addEventListener('hashchange', openHash);
+    openHash();
+  })();
+
+  /* ========================================================
      7. UPTIME
      ======================================================== */
   (function uptime() {

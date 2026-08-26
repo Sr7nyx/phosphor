@@ -114,9 +114,9 @@ window.PHOSPHOR = {
       note: 'FYP <b>DocuChain</b> \u2014 blockchain document verification on Ethereum + IPFS', state: 'up' },
     { t: '[  0x4D455243]', when: 'Jul \u2013 Dec 2025', what: 'InfoSec Compliance Intern', where: 'Merchantrade Asia',
       note: 'privileged-access reviews \u00b7 CIS hardening \u00b7 audit readiness at a licensed FSI', state: 'up' },
-    { t: '[  0x4B594F55]', when: 'Apr \u2013 May 2026', what: 'K-Youth Development Programme', where: 'Khazanah Nasional Berhad',
+    { t: '[  0x4B594F55]', when: 'Apr \u2013 Jul 2026', what: 'K-Youth Development Programme', where: 'Khazanah Nasional Berhad',
       note: 'national talent programme \u2014 industry readiness across security + governance', state: 'up' },
-    { t: '[  now.online]', when: 'June 2026 \u2192', what: 'Penetration Tester', where: 'AirAsia',
+    { t: '[  now.online]', when: 'May 2026 \u2192', what: 'Penetration Tester', where: 'AirAsia',
       note: 'weekly VA + manual web testing on production \u00b7 triage \u00b7 remediation to close', state: 'active' }
   ],
 

@@ -667,3 +667,77 @@ html::-webkit-scrollbar{ display:none; }   /* WebKit / Blink */
   font-variant-ligatures:none;
   font-feature-settings:"liga" 0, "calt" 0;
 }
+
+/* ---------- skip link ---------- */
+.skiplink{
+  position:fixed; left:var(--pad-l); top:-100px; z-index:300;
+  background:var(--void); color:var(--signal);
+  border:1px solid var(--signal); padding:.7rem 1.1rem;
+  font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+  text-decoration:none;
+  transition:top .16s ease;
+}
+.skiplink:focus{ top:calc(var(--cell) * 2); outline:none; }
+
+/* ---------- softkeys: a VT220 function-key row, not a navbar ---------- */
+#softkeys{
+  position:fixed; left:0; right:0; bottom:0; z-index:95;
+  background:linear-gradient(to top, rgba(7,5,3,.97), rgba(7,5,3,.82) 62%, transparent);
+  -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px);
+  border-top:1px solid var(--phosphor-ash);
+  padding-bottom:env(safe-area-inset-bottom);
+  transition:transform .26s ease;
+}
+#softkeys.tuck{ transform:translateY(calc(100% + 2px)); }
+
+.sk-progress{ height:1px; background:transparent; }
+.sk-progress i{
+  display:block; height:100%; width:0;
+  background:var(--phosphor);
+  box-shadow:0 0 6px var(--phosphor);
+  transition:width .1s linear;
+}
+
+#sk-list{
+  display:flex; list-style:none; margin:0;
+  padding:.35rem var(--pad-r) .35rem var(--pad-l);
+  gap:0;
+}
+#sk-list li{ flex:1 1 0; min-width:0; }
+#sk-list button{
+  width:100%; min-height:44px;
+  background:none; border:0; border-right:1px solid var(--phosphor-ash);
+  color:var(--phosphor-dim); font:inherit; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:.6ch;
+  padding:.4rem .2rem;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  transition:color .14s ease, background .14s ease;
+  white-space:nowrap; overflow:hidden;
+}
+#sk-list li:last-child button{ border-right:0; }
+#sk-list button b{
+  color:var(--phosphor-ash); font-weight:500; font-size:10px;
+  transition:color .14s ease;
+}
+#sk-list button:hover{ color:var(--phosphor); background:rgba(255,163,26,.05); }
+#sk-list button:hover b{ color:var(--phosphor-dim); }
+#sk-list button.on{
+  color:var(--phosphor); background:rgba(255,163,26,.07);
+  text-shadow:0 0 8px currentColor;
+}
+#sk-list button.on b{ color:var(--signal); }
+#sk-list button:focus-visible{ outline:1px solid var(--signal); outline-offset:-2px; }
+
+/* keep the last section clear of the bar */
+#contact-sec{ padding-bottom:calc(var(--gut) * 2.2); }
+:focus{ outline:none; }
+section:focus{ outline:none; }
+
+@media (max-width:640px){
+  /* phones have no function keys - the label is the useful half */
+  #sk-list button b{ display:none; }
+  #sk-list button{ font-size:10px; letter-spacing:.1em; padding:.4rem .1rem; }
+}
+@media (max-width:380px){
+  #sk-list{ padding-left:.4rem; padding-right:.4rem; }
+}
