@@ -74,6 +74,20 @@
     <ol id="trace" class="trace"></ol>
   </section>
 
+  <section class="pane" id="recon-sec">
+    <p class="eyebrow">Passive recon</p>
+    <p class="tagline">Every site you visit can read the following without asking.
+    This one read it in your browser, showed you, and <em>stored none of it</em> &mdash;
+    nothing left this page.</p>
+    <div id="recon">
+      <div class="rc-head">
+        <span>ATTRIBUTE</span><span>VALUE</span><span>STORED</span>
+      </div>
+      <ul id="rc-list"></ul>
+      <div class="rc-foot" id="rc-foot"></div>
+    </div>
+  </section>
+
   <section class="pane" id="replay-sec">
     <p class="eyebrow">Replay</p>
     <div id="rp-tabs" class="rp-tabs" role="tablist" aria-label="Choose a demo"></div>
@@ -120,6 +134,7 @@
 
 </div>
 
+<div id="lamp" aria-hidden="true"></div>
 <div class="glass grille"></div>
 <div class="glass hum"></div>
 <div class="glass vig"></div>

@@ -819,6 +819,7 @@ section:focus{ outline:none; }
   #sk-list button{ padding:.55rem .85rem; font-size:10px; letter-spacing:.1em; }
 }
 @media (max-width:560px){
+  #sk-list li:last-child{ display:none; }   /* 'top' - least useful, first to go */
   #sk-list button b{ display:none; }
   #sk-list button{ padding:.5rem .66rem; min-height:48px; }
   #softkeys{ bottom:calc(var(--cell) * .7 + env(safe-area-inset-bottom)); perspective:none; }
@@ -832,3 +833,144 @@ section:focus{ outline:none; }
   :root:not([data-motion="force"]) .sk-panel{ transition:none; }
 }
 
+
+/* ==========================================================
+   DEPTH SYSTEM
+   One light source (#lamp) sits in the tube. Every raised
+   surface uses the same three cues: a lit top lip, a
+   shadowed bottom lip, and a cast shadow. Nothing invents
+   its own lighting, which is what makes it read as one
+   physical space rather than as scattered hover effects.
+   ========================================================== */
+
+#lamp{
+  position:fixed; left:0; top:0; z-index:1;
+  width:600px; height:600px;
+  pointer-events:none;
+  opacity:0; transition:opacity 1.2s ease;
+  background:radial-gradient(circle at 50% 50%,
+    rgba(255,163,26,.075) 0%,
+    rgba(255,163,26,.035) 32%,
+    rgba(255,163,26,0) 68%);
+  will-change:transform;
+}
+#lamp.on{ opacity:1; }
+
+/* ---- findings: each row is a slab that lifts into the light ---- */
+.f-row{
+  transform:translateZ(0);
+  transition:background .16s linear, transform .18s cubic-bezier(.2,.7,.3,1),
+             box-shadow .18s ease;
+}
+.f-row:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255,163,26,.20) inset,
+    0 -1px 0 rgba(0,0,0,.55) inset,
+    0 10px 22px -14px rgba(0,0,0,.85);
+}
+.f-row:active{ transform:translateY(0); }
+
+/* the opened body reads as a drawer pulled out of the slab */
+.f-body.open{
+  box-shadow:
+    0 1px 0 rgba(255,163,26,.10) inset,
+    0 14px 26px -20px rgba(0,0,0,.9) inset;
+}
+
+/* ---- the console is a recessed well, not a raised object ---- */
+#console{
+  box-shadow:
+    0 2px 6px rgba(0,0,0,.55) inset,
+    0 -1px 0 rgba(255,163,26,.07) inset;
+}
+
+/* ---- replay is a raised instrument panel, same lip language ---- */
+#replay{
+  box-shadow:
+    0 1px 0 rgba(255,163,26,.13) inset,
+    0 -1px 0 rgba(0,0,0,.75) inset,
+    0 16px 30px -22px rgba(0,0,0,.8);
+}
+
+/* ---- hero type gets real extrusion, lit from above ---- */
+.callsign{
+  text-shadow:
+    0 1px 0   rgba(255,227,174,.55),
+    0 2px 0   rgba(184,122,42,.40),
+    0 3px 0   rgba(122,74,14,.28),
+    0 4px 1px rgba(0,0,0,.55),
+    0 0 2px   rgba(255,227,174,.9),
+    0 0 22px  rgba(255,163,26,.55),
+    0 0 70px  rgba(255,120,0,.28);
+}
+
+/* ---- capability tokens sit on the surface and lift when lit ---- */
+.sk-items span:hover{
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.6),
+    0 0 2px rgba(255,227,174,.9),
+    0 0 12px rgba(255,163,26,.6),
+    0 0 26px rgba(255,120,0,.35);
+}
+
+/* ---- trace rail reads as a channel cut into the surface ---- */
+.trace::before{
+  box-shadow:1px 0 0 rgba(255,163,26,.07);
+}
+
+@media (pointer:coarse){
+  #lamp{ display:none; }
+  .f-row:hover{ transform:none; box-shadow:none; }
+}
+@media (prefers-reduced-motion:reduce){
+  :root:not([data-motion="force"]) #lamp{ display:none; }
+  :root:not([data-motion="force"]) .f-row{ transition:none; }
+}
+
+/* parallax targets need a compositor layer and no transition fighting the rAF */
+.pane > .eyebrow{ will-change:transform; }
+.callsign{ will-change:transform, opacity; transform-origin:0% 50%; }
+#typed{ will-change:transform, opacity; }
+
+/* ---------- passive recon ---------- */
+#recon{
+  border:1px solid var(--phosphor-ash);
+  background:rgba(7,5,3,.55);
+  margin-top:var(--gut);
+  box-shadow:0 2px 6px rgba(0,0,0,.5) inset,
+             0 -1px 0 rgba(255,163,26,.07) inset;
+}
+.rc-head, .rc-row{
+  display:grid; grid-template-columns:14ch 1fr 7ch;
+  gap:var(--cell); align-items:baseline;
+  padding:calc(var(--cell)*.4) var(--cell);
+}
+.rc-head{
+  font-size:10px; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--phosphor-dim);
+  border-bottom:1px solid var(--phosphor-ash);
+}
+#rc-list{ list-style:none; margin:0; padding:0; }
+.rc-row{ border-bottom:1px solid rgba(58,36,9,.55); font-size:13px; }
+.rc-row:last-child{ border-bottom:0; }
+.rc-k{ color:var(--phosphor-dim); }
+.rc-v{ color:var(--phosphor); word-break:break-word; }
+.rc-s{
+  text-align:right; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--signal);
+}
+.rc-foot{
+  padding:var(--cell);
+  border-top:1px solid var(--phosphor-ash);
+  font-size:12px; color:var(--phosphor-dim);
+  min-height:var(--cell);
+}
+.rc-foot b{ color:var(--phosphor); font-weight:500; }
+.rc-foot .ok{ color:var(--signal); }
+.rc-foot .bad{ color:var(--burn); }
+
+@media (max-width:640px){
+  .rc-head, .rc-row{ grid-template-columns:11ch 1fr 5ch; gap:calc(var(--cell)*.6); padding-left:calc(var(--cell)*.6); padding-right:calc(var(--cell)*.6); }
+  .rc-row{ font-size:12px; }
+}

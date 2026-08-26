@@ -1043,9 +1043,10 @@
       { k: '1', id: 'findings-sec', label: 'register' },
       { k: '2', id: 'skills-sec',   label: 'caps'     },
       { k: '3', id: 'trace-sec',    label: 'trace'    },
-      { k: '4', id: 'replay-sec',   label: 'replay'   },
-      { k: '5', id: 'contact-sec',  label: 'contact'  },
-      { k: '6', id: 'hero',         label: 'top'      }
+      { k: '4', id: 'recon-sec',    label: 'recon'    },
+      { k: '5', id: 'replay-sec',   label: 'replay'   },
+      { k: '6', id: 'contact-sec',  label: 'contact'  },
+      { k: '7', id: 'hero',         label: 'top'      }
     ].filter(function (x) { return document.getElementById(x.id); });
 
     function goto(id) {
@@ -1172,6 +1173,177 @@
     }
     addEventListener('hashchange', openHash);
     openHash();
+  })();
+
+  /* ========================================================
+     10. LAMP
+         A single moving light source in the tube. Every
+         raised surface on the page is lit by this, which is
+         what makes the depth read as one physical system
+         rather than as unrelated hover effects.
+     ======================================================== */
+  (function lamp() {
+    var el = document.getElementById('lamp');
+    if (!el || REDUCE || !matchMedia('(pointer: fine)').matches) return;
+
+    var x = innerWidth * 0.5, y = innerHeight * 0.35;
+    var tx = x, ty = y, queued = false;
+
+    addEventListener('mousemove', function (e) {
+      tx = e.clientX; ty = e.clientY;
+      if (!queued) { queued = true; requestAnimationFrame(step); }
+    }, { passive: true });
+
+    function step() {
+      queued = false;
+      // lag the light behind the cursor so it feels like mass, not a pointer
+      x += (tx - x) * 0.12;
+      y += (ty - y) * 0.12;
+      el.style.transform = 'translate3d(' + (x - 300) + 'px,' + (y - 300) + 'px,0)';
+      document.documentElement.style.setProperty('--lampx', x.toFixed(0) + 'px');
+      document.documentElement.style.setProperty('--lampy', y.toFixed(0) + 'px');
+      if (Math.abs(tx - x) > 0.5 || Math.abs(ty - y) > 0.5) {
+        queued = true; requestAnimationFrame(step);
+      }
+    }
+    el.classList.add('on');
+    step();
+  })();
+
+  /* ========================================================
+     11. DEPTH PARALLAX
+         Section headers sit slightly further back than their
+         content and drift at a different rate. Small numbers
+         on purpose - the effect should be felt as space, not
+         noticed as movement.
+     ======================================================== */
+  (function parallax() {
+    if (REDUCE) return;
+    var eyebrows = [].slice.call(document.querySelectorAll('.pane > .eyebrow'));
+    var heroEl   = document.getElementById('hero');
+    var callsign = document.querySelector('.callsign');
+    var typed    = document.getElementById('typed');
+    if (!eyebrows.length && !heroEl) return;
+
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var vh = innerHeight || 800;
+
+      // headers drift up slightly slower than the page
+      eyebrows.forEach(function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.bottom < -80 || r.top > vh + 80) return;
+        var mid = (r.top + r.height / 2 - vh / 2) / vh;   // -0.5 .. 0.5
+        el.style.transform = 'translateY(' + (mid * 14).toFixed(1) + 'px)';
+      });
+
+      // hero recedes as you leave it: drops back and dims, rather than fading
+      if (heroEl && callsign) {
+        var hr = heroEl.getBoundingClientRect();
+        var out = Math.max(0, Math.min(1, -hr.top / (vh * 0.85)));
+        callsign.style.transform =
+          'translateY(' + (out * 46).toFixed(1) + 'px) scale(' + (1 - out * 0.06).toFixed(4) + ')';
+        callsign.style.opacity = (1 - out * 0.72).toFixed(3);
+        if (typed) {
+          typed.style.transform = 'translateY(' + (out * 74).toFixed(1) + 'px)';
+          typed.style.opacity = (1 - out * 0.9).toFixed(3);
+        }
+      }
+    }
+    function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+    addEventListener('scroll', onScroll, { passive: true });
+    addEventListener('resize', onScroll, { passive: true });
+    update();
+  })();
+
+  /* ========================================================
+     12. PASSIVE RECON
+         Reads what any site can read about a visitor, shows
+         it to them, and stores none of it. The point is the
+         last column: every row says NO. It demonstrates the
+         privacy claim instead of asserting it - which is the
+         same argument the rest of this site makes about
+         evidence.
+     ======================================================== */
+  (function recon() {
+    var list = document.getElementById('rc-list');
+    var foot = document.getElementById('rc-foot');
+    var sect = document.getElementById('recon-sec');
+    if (!list) return;
+
+    function safe(fn, fallback) {
+      try { var v = fn(); return (v === undefined || v === null || v === '') ? fallback : v; }
+      catch (e) { return fallback; }
+    }
+
+    function gpu() {
+      try {
+        var c = document.createElement('canvas');
+        var g = c.getContext('webgl') || c.getContext('experimental-webgl');
+        if (!g) return 'unavailable';
+        var dbg = g.getExtension('WEBGL_debug_renderer_info');
+        if (!dbg) return g.getParameter(g.RENDERER) || 'masked';
+        return g.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || 'masked';
+      } catch (e) { return 'blocked'; }
+    }
+
+    function net() {
+      var c = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (!c) return 'not exposed';
+      return [c.effectiveType, c.downlink ? c.downlink + ' Mbps' : null]
+        .filter(Boolean).join(' \u00b7 ') || 'not exposed';
+    }
+
+    var ROWS = [
+      ['screen',      safe(function(){ return screen.width + '\u00d7' + screen.height + ' @ ' + (devicePixelRatio||1) + 'x'; }, 'unknown')],
+      ['viewport',    safe(function(){ return innerWidth + '\u00d7' + innerHeight; }, 'unknown')],
+      ['timezone',    safe(function(){ return Intl.DateTimeFormat().resolvedOptions().timeZone; }, 'unknown')],
+      ['locale',      safe(function(){ return (navigator.languages || [navigator.language]).slice(0,3).join(', '); }, 'unknown')],
+      ['platform',    safe(function(){ return (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform; }, 'unknown')],
+      ['gpu',         gpu()],
+      ['cpu threads', safe(function(){ return navigator.hardwareConcurrency + ' logical'; }, 'not exposed')],
+      ['memory',      safe(function(){ return navigator.deviceMemory + ' GB (approx)'; }, 'not exposed')],
+      ['touch',       safe(function(){ return (navigator.maxTouchPoints||0) > 0 ? navigator.maxTouchPoints + ' points' : 'none'; }, 'unknown')],
+      ['network',     net()],
+      ['do not track',safe(function(){ return navigator.doNotTrack === '1' ? 'enabled' : 'not set'; }, 'not set')],
+      ['referrer',    safe(function(){ return document.referrer ? new URL(document.referrer).hostname : 'none \u2014 typed or bookmarked'; }, 'none')]
+    ];
+
+    list.innerHTML = ROWS.map(function (r) {
+      return '<li class="rc-row">' +
+               '<span class="rc-k">' + r[0] + '</span>' +
+               '<span class="rc-v">' + String(r[1]) + '</span>' +
+               '<span class="rc-s">no</span>' +
+             '</li>';
+    }).join('');
+
+    /* self-audit: measure this page's own footprint, live */
+    function audit() {
+      var thirdParty = 0, total = 0;
+      try {
+        var here = location.host;
+        var res = performance.getEntriesByType('resource') || [];
+        total = res.length;
+        res.forEach(function (e) {
+          try { if (new URL(e.name).host !== here) thirdParty++; } catch (x) {}
+        });
+      } catch (e) {}
+      var cookies = document.cookie ? document.cookie.split(';').length : 0;
+      var stored = 0;
+      try { stored = localStorage.length + sessionStorage.length; } catch (e) {}
+
+      if (foot) {
+        foot.innerHTML =
+          '<b>This page, audited live:</b> ' +
+          total + ' request' + (total === 1 ? '' : 's') + ' \u00b7 ' +
+          '<span class="' + (thirdParty ? 'bad' : 'ok') + '">' + thirdParty + ' third-party</span> \u00b7 ' +
+          '<span class="' + (cookies ? 'bad' : 'ok') + '">' + cookies + ' cookies</span> \u00b7 ' +
+          '<span class="' + (stored ? 'bad' : 'ok') + '">' + stored + ' storage entries</span>';
+      }
+    }
+    if (document.readyState === 'complete') audit();
+    else addEventListener('load', function () { setTimeout(audit, 300); });
   })();
 
   /* ========================================================
