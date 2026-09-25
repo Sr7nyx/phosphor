@@ -307,3 +307,288 @@ window.PHOSPHOR = {
     }
   ]
 };
+
+/* ==========================================================
+   CASE STUDIES - keyed by finding id. A finding with an entry
+   here gets a 'case study' control. Tab types: overview,
+   pipeline, decisions, screens. Add REG-002 when ready.
+   ========================================================== */
+window.PHOSPHOR.cases = {
+  "REG-001": {
+    "title": "vapt.console",
+    "kicker": "case study \u00b7 ai-assisted vapt workspace",
+    "tabs": [
+      {
+        "id": "overview",
+        "label": "overview",
+        "type": "overview",
+        "quote": "The model is assumed wrong until the evidence says otherwise.",
+        "paras": [
+          "vapt.console takes an engagement from raw scanner output and pasted evidence through triage to a client-ready report. Two language models do the drafting. <b>Neither of them gets the final word.</b>",
+          "Every claim a model makes is either settled by a deterministic check against the evidence, argued against by a second model whose only job is the false-positive case, or held open. Nothing is forced into a verdict to make a dashboard look finished.",
+          "The interesting engineering is not the model calls. It is everything built around them so that a confident wrong answer cannot quietly reach a client."
+        ],
+        "facts": [
+          [
+            "target",
+            "Gin & Juice Shop \u2014 PortSwigger\u2019s deliberately vulnerable app"
+          ],
+          [
+            "data",
+            "demo environment \u00b7 synthetic only"
+          ],
+          [
+            "models",
+            "extraction + reviewer, gpt-oss-120b via Groq \u00b7 bring your own key"
+          ],
+          [
+            "stack",
+            "Next.js \u00b7 FastAPI \u00b7 Postgres \u00b7 Google OAuth"
+          ],
+          [
+            "exports",
+            "HTML \u00b7 DOCX \u00b7 PDF \u00b7 XLSX \u00b7 JSON"
+          ],
+          [
+            "licence",
+            "MIT"
+          ]
+        ]
+      },
+      {
+        "id": "pipeline",
+        "label": "pipeline",
+        "type": "pipeline",
+        "intro": "Six stages. Each one is a place a claim can be stopped.",
+        "stages": [
+          [
+            "ingest",
+            "Burp, ZAP, Nessus, Nmap and CSV exports, or pasted HTTP, logs and source. Five scanner dialects normalise into one schema, offline."
+          ],
+          [
+            "parse",
+            "Evidence is parsed into HTTP exchanges, and each finding is bound to the one exchange it concerns."
+          ],
+          [
+            "verify",
+            "Twelve deterministic checks settle the finding from that exchange. CVSS is recomputed from the vector; quoted evidence is matched back to source."
+          ],
+          [
+            "challenge",
+            "A second model makes the false-positive case for every finding \u2014 what benign explanation fits the same evidence?"
+          ],
+          [
+            "verdict",
+            "A fixed rule combines the signals. Ambiguous findings are held rather than forced."
+          ],
+          [
+            "report",
+            "A pre-flight names what should not reach a client before any export: contradicted claims, unadjudicated findings, missing scores."
+          ]
+        ],
+        "replay": "watch it run on real ZAP output"
+      },
+      {
+        "id": "decisions",
+        "label": "decisions",
+        "type": "decisions",
+        "intro": "Lines lifted verbatim from the interface. Each one is a design decision someone would otherwise have made the other way.",
+        "items": [
+          [
+            "A guessed framework category is worse than an absent one, because it looks authoritative in a report.",
+            "overview \u00b7 framework coverage",
+            "A blank is honest. A wrong OWASP label survives into the deliverable and gets acted on."
+          ],
+          [
+            "Ambiguous findings are held rather than forced.",
+            "pipeline \u00b7 challenge",
+            "A binary verdict on thin evidence is a coin flip written up as analysis."
+          ],
+          [
+            "Remediation is measured against what was retested in this round, not against every finding.",
+            "retest",
+            "The denominator is part of the claim. Pick the wrong one and an unfinished round reads as a bad fix rate."
+          ],
+          [
+            "Derived from each finding\u2019s retest history, so it cannot drift out of step with them.",
+            "retest \u00b7 round summary",
+            "Store the facts, derive the summary. A total kept separately will eventually disagree with its own rows."
+          ],
+          [
+            "Risk blends CVSS with exploit probability and environment. Severity is the raw rating.",
+            "overview \u00b7 where to start",
+            "Severity describes the bug. Risk describes this client. Conflating them misorders the remediation queue."
+          ],
+          [
+            "ATT&CK describes post-compromise behaviour on endpoints, so this is indicative context rather than observed adversary activity.",
+            "overview \u00b7 mitre att&ck",
+            "Mapping a web finding to a technique is not evidence anyone used it, and the interface says so."
+          ],
+          [
+            "Checked against the selection, not the whole project.",
+            "reports \u00b7 pre-flight",
+            "Warnings about findings you are not shipping are noise, and noise trains people to click past warnings."
+          ]
+        ]
+      },
+      {
+        "id": "screens",
+        "label": "screens",
+        "type": "screens",
+        "intro": "The live demo instance, captured. Switch screens along the top, click a numbered marker, or click the page to read it full size.",
+        "shots": [
+          {
+            "src": "/assets/cases/vc-landing.webp",
+            "title": "landing",
+            "caption": "The whole design, stated before sign-in.",
+            "spots": [
+              [
+                21,
+                31,
+                "The thesis in one line: the models draft, deterministic checks decide."
+              ],
+              [
+                22,
+                54,
+                "Six stages, each a place a claim can be stopped."
+              ],
+              [
+                44,
+                90,
+                "The reviewer is adversarial by design \u2014 its job is to argue the finding is false."
+              ]
+            ],
+            "src1": "/assets/cases/vc-landing-1280.webp"
+          },
+          {
+            "src": "/assets/cases/vc-overview.webp",
+            "title": "overview",
+            "caption": "The dashboard leads with doubt, not with a count of criticals.",
+            "spots": [
+              [
+                3,
+                26,
+                "22 of 23 demo findings carry a verification flag, and that is the first thing the dashboard says."
+              ],
+              [
+                70,
+                19,
+                "Severity is the raw rating. Priority is computed separately from exploit likelihood and environment."
+              ],
+              [
+                3,
+                79,
+                "One finding could not be mapped, so it stays unmapped rather than guessed."
+              ]
+            ],
+            "src1": "/assets/cases/vc-overview-1280.webp"
+          },
+          {
+            "title": "analyzer",
+            "caption": "Where evidence goes in.",
+            "spots": [
+              [
+                27,
+                14.5,
+                "Two model roles named on screen: extraction drafts, the reviewer challenges. Check pings both before a run."
+              ],
+              [
+                26,
+                21,
+                "Demo runs are capped on a shared key; bring your own key for unlimited use on your provider quota."
+              ],
+              [
+                27,
+                53,
+                "Raw evidence in: HTTP exchanges, scanner output, logs, source, plus text attachments up to 15,000 characters."
+              ]
+            ],
+            "src": "/assets/cases/vc-analyzer.webp",
+            "src1": "/assets/cases/vc-analyzer-1280.webp"
+          },
+          {
+            "src": "/assets/cases/vc-findings.webp",
+            "title": "findings",
+            "caption": "Every verdict shows how it was reached.",
+            "spots": [
+              [
+                85,
+                27,
+                "Confirmed 100% \u2014 settled by a deterministic check, not by model confidence."
+              ],
+              [
+                84,
+                33,
+                "A High-severity SQL injection, adjudicated as a likely false positive at 51%."
+              ],
+              [
+                89,
+                38,
+                "Plausible but unproven, so it stays at Need Review."
+              ]
+            ],
+            "src1": "/assets/cases/vc-findings-1280.webp"
+          },
+          {
+            "src": "/assets/cases/vc-retest.webp",
+            "title": "retest",
+            "caption": "Round metrics that cannot drift from their own evidence.",
+            "spots": [
+              [
+                26,
+                18,
+                "Coverage, remediation and regression, derived from per-finding retest history."
+              ],
+              [
+                26,
+                26,
+                "Remediation is measured against what was retested, so a partial round is not a poor fix rate."
+              ],
+              [
+                71,
+                37,
+                "Outcomes are recorded per finding, per round."
+              ]
+            ],
+            "src1": "/assets/cases/vc-retest-1280.webp"
+          },
+          {
+            "src": "/assets/cases/vc-reports.webp",
+            "title": "reports",
+            "caption": "The last gate before a client sees anything.",
+            "spots": [
+              [
+                29,
+                60,
+                "Pre-flight names what should not ship, checked against the selection only."
+              ],
+              [
+                29,
+                81,
+                "Shipping flagged findings needs an explicit, recorded acknowledgement."
+              ],
+              [
+                29,
+                91,
+                "HTML by default \u2014 opens anywhere, sends as one file, keeps evidence readable."
+              ]
+            ],
+            "src1": "/assets/cases/vc-reports-1280.webp"
+          }
+        ],
+        "host": "vapt-ai-assistant.vercel.app",
+        "live": "https://vapt-ai-assistant.vercel.app"
+      }
+    ],
+    "links": [
+      [
+        "live console",
+        "https://vapt-ai-assistant.vercel.app"
+      ],
+      [
+        "source",
+        "https://github.com/Sr7nyx/vapt-ai-assistant"
+      ]
+    ]
+  }
+};

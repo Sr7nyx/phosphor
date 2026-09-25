@@ -506,9 +506,14 @@
 
   var BLOCK = ['\u2591', '\u2592', '\u2593', '\u2588'];
 
-  function linkRow(links) {
-    if (!links || !links.length) return '';
-    return '<div class="f-links">' + links.map(function (k) {
+  function linkRow(links, id) {
+    var hasCase = !!(id && DATA.cases && DATA.cases[id]);
+    if ((!links || !links.length) && !hasCase) return '';
+    links = links || [];
+    var caseBtn = hasCase
+      ? '<button type="button" class="case-go" data-case="' + id + '">case study<i aria-hidden="true">\u25B8</i></button>'
+      : '';
+    return '<div class="f-links">' + caseBtn + links.map(function (k) {
       return '<a href="' + k.u + '" target="_blank" rel="noopener noreferrer">' +
              k.l + '<i aria-hidden="true">\u2197</i></a>';
     }).join('') + '</div>';
@@ -520,7 +525,7 @@
     FINDINGS.forEach(function (f, i) {
       var li = document.createElement('li');
       li.innerHTML =
-        '<div class="f-row" tabindex="0" role="button" aria-expanded="false" aria-controls="b' + i + '">' +
+        '<div class="f-row"' + (DATA.cases && DATA.cases[f.id] ? ' data-case="1"' : '') + ' tabindex="0" role="button" aria-expanded="false" aria-controls="b' + i + '">' +
           '<div class="sev" data-s="' + f.s + '" aria-label="severity ' + f.s + ' of 4">' + BLOCK[f.s - 1].repeat(3) + '</div>' +
           '<div class="f-id">' + f.id + '</div>' +
           '<div class="f-title">' + f.title + '</div>' +
@@ -530,7 +535,7 @@
           (f.lead ? '<div class="f-lead">' + f.lead + '</div>' : '') +
           '<div>' + f.body + '</div>' +
           '<div class="f-meta">' + f.meta.map(function (m) { return '<span>' + m + '</span>'; }).join('') + '</div>' +
-          linkRow(f.links) +
+          linkRow(f.links, f.id) +
         '</div>';
       var row = li.querySelector('.f-row'), body = li.querySelector('.f-body');
       function toggle() {
@@ -1072,6 +1077,7 @@
       var t = e.target;
       if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (document.documentElement.classList.contains('case-open')) return;
 
       // Number keys 1-6 are the real bindings. F5 is reload and F1 is help
       // in most browsers - hijacking those is hostile, so the F-labels are
@@ -1344,6 +1350,269 @@
     }
     if (document.readyState === 'complete') audit();
     else addEventListener('load', function () { setTimeout(audit, 300); });
+  })();
+
+  /* ========================================================
+     14. CASE STUDIES
+         A finding row opens into a full case panel. The panel
+         grows out of the row it was opened from, holds its own
+         tabs (digits switch them), and returns focus and scroll
+         to exactly where the reader was.
+     ======================================================== */
+  (function cases() {
+    var CASES = DATA.cases || {};
+    var root  = document.getElementById('case');
+    var panel = document.getElementById('case-panel');
+    var tabs  = document.getElementById('case-tabs');
+    var body  = document.getElementById('case-body');
+    var foot  = document.getElementById('case-foot');
+    if (!root || !panel) return;
+
+    var opener = null, current = null, tabIx = 0, scrollY = 0;
+
+    function esc(t) {
+      return String(t).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
+
+    var R = {
+      overview: function (t) {
+        return '<blockquote class="cs-quote">' + esc(t.quote) + '</blockquote>' +
+          (t.paras || []).map(function (x) { return '<p class="cs-p">' + x + '</p>'; }).join('') +
+          '<dl class="cs-facts">' + (t.facts || []).map(function (f) {
+            return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
+          }).join('') + '</dl>';
+      },
+      pipeline: function (t) {
+        return '<p class="cs-intro">' + esc(t.intro) + '</p><ol class="cs-pipe">' +
+          t.stages.map(function (st, i) {
+            return '<li><span class="cs-n">' + String(i + 1).padStart(2, '0') + '</span>' +
+                   '<b>' + esc(st[0]) + '</b><span>' + esc(st[1]) + '</span></li>';
+          }).join('') + '</ol>' +
+          (t.replay ? '<button type="button" class="cs-cta" data-replay="1">' + esc(t.replay) + ' \u2192</button>' : '');
+      },
+      decisions: function (t) {
+        return '<p class="cs-intro">' + esc(t.intro) + '</p><ol class="cs-dec">' +
+          t.items.map(function (d, i) {
+            return '<li><span class="cs-n">' + String(i + 1).padStart(2, '0') + '</span><div>' +
+                   '<q>' + esc(d[0]) + '</q><small>' + esc(d[1]) + '</small>' +
+                   '<p>' + esc(d[2]) + '</p></div></li>';
+          }).join('') + '</ol>';
+      },
+      screens: function (t) {
+        return '<div class="cs-screens-bar"><p class="cs-intro">' + esc(t.intro) + '</p>' +
+          '<button type="button" class="cs-tc" aria-pressed="' + tinted + '">tube tint</button></div>' +
+          '<div class="browser">' +
+            '<div class="br-bar">' +
+              '<span class="br-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+              '<a class="br-url" href="' + esc(t.live) + '" target="_blank" rel="noopener noreferrer" title="Open the live console">' +
+                '<span class="br-sch">https://</span>' + esc(t.host) + '<span class="br-path" id="br-path"></span></a>' +
+              '<span class="br-live">demo</span>' +
+            '</div>' +
+            '<div class="br-tabs" role="tablist">' + t.shots.map(function (sh, i) {
+              return '<button type="button" class="br-tab" data-shot="' + i + '"><b>' + (i + 1) + '</b>' + esc(sh.title) + '</button>';
+            }).join('') + '</div>' +
+            '<div class="br-view" id="br-view" title="Click to read full size"></div>' +
+          '</div>' +
+          '<div class="br-meta"><p class="br-cap" id="br-cap"></p>' +
+            '<span class="br-nav"><button type="button" class="br-step" data-step="-1" aria-label="Previous screen">\u2190</button>' +
+            '<span id="br-count"></span>' +
+            '<button type="button" class="br-step" data-step="1" aria-label="Next screen">\u2192</button></span></div>' +
+          '<ol class="cs-notes" id="br-notes"></ol>';
+      }
+    };
+
+    var tinted = false, shotIx = 0, shotTab = null;
+
+    function showShot(k) {
+      if (!shotTab) return;
+      var list = shotTab.shots;
+      shotIx = (k + list.length) % list.length;
+      var sh = list[shotIx];
+      var view = document.getElementById('br-view');
+      if (!view) return;
+      view.classList.remove('swap'); void view.offsetWidth; view.classList.add('swap');
+      view.innerHTML =
+        '<img src="' + esc(sh.src1) + '" srcset="' + esc(sh.src1) + ' 1280w, ' + esc(sh.src) + ' 2400w" ' +
+        'sizes="(max-width: 1160px) 100vw, 1060px" alt="vapt.console ' + esc(sh.title) + ' screen" decoding="async">' +
+        sh.spots.map(function (sp, n) {
+          return '<button type="button" class="spot" data-s="' + n + '" data-x="' + sp[0] + '" data-y="' + sp[1] + '" aria-label="Note ' + (n + 1) + '">' + (n + 1) + '</button>';
+        }).join('');
+      [].forEach.call(view.querySelectorAll('.spot'), function (b) {       // CSP: CSSOM, not style=""
+        b.style.left = b.getAttribute('data-x') + '%';
+        b.style.top  = b.getAttribute('data-y') + '%';
+      });
+      document.getElementById('br-notes').innerHTML = sh.spots.map(function (sp, n) {
+        return '<li data-s="' + n + '"><span>' + (n + 1) + '</span>' + esc(sp[2]) + '</li>';
+      }).join('');
+      document.getElementById('br-cap').innerHTML = '<b>' + esc(sh.title) + '</b> ' + esc(sh.caption);
+      document.getElementById('br-path').textContent = shotIx === 0 ? '' : ' \u00b7 ' + sh.title;
+      document.getElementById('br-count').textContent = (shotIx + 1) + ' / ' + list.length;
+      [].forEach.call(body.querySelectorAll('.br-tab'), function (b, n) {
+        b.classList.toggle('on', n === shotIx);
+        b.setAttribute('aria-selected', String(n === shotIx));
+      });
+      // warm the next screen so switching is instant
+      var nx = list[(shotIx + 1) % list.length]; if (nx) { var pre = new Image(); pre.src = nx.src1; }
+    }
+
+    var lb = null;
+    function openLightbox() {
+      if (!shotTab) return;
+      var sh = shotTab.shots[shotIx];
+      lb = document.createElement('div');
+      lb.className = 'lb';
+      lb.innerHTML = '<div class="lb-bar"><b>' + esc(sh.title) + '</b> full size \u00b7 scroll to pan' +
+                     '<button type="button" class="lb-x" aria-label="Close full size view">esc \u00d7</button></div>' +
+                     '<div class="lb-scroll"><img src="' + esc(sh.src) + '" alt="vapt.console ' + esc(sh.title) + ' screen, full size"></div>';
+      var el = lb;
+      root.appendChild(el);
+      requestAnimationFrame(function () { if (el.parentNode) el.classList.add('in'); });
+      var x = lb.querySelector('.lb-x'); if (x) x.focus({ preventScroll: true });
+    }
+    function closeLightbox() {
+      if (!lb) return false;
+      var el = lb; lb = null; el.classList.remove('in');
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 180);
+      return true;
+    }
+
+    function showTab(i) {
+      if (!current) return;
+      var list = current.tabs;
+      tabIx = Math.max(0, Math.min(list.length - 1, i));
+      [].forEach.call(tabs.children, function (b, n) {
+        b.classList.toggle('on', n === tabIx);
+        b.setAttribute('aria-selected', String(n === tabIx));
+        b.tabIndex = n === tabIx ? 0 : -1;
+      });
+      var t = list[tabIx];
+      body.innerHTML = '<div class="cs-pane cs-' + t.type + '">' + (R[t.type] ? R[t.type](t) : '') + '</div>';
+      body.scrollTop = 0;
+      shotTab = (t.type === 'screens') ? t : null;
+      if (shotTab) showShot(0);
+    }
+
+    function open(id, from) {
+      var c = CASES[id]; if (!c) return;
+      current = c; opener = from || document.activeElement;
+      scrollY = window.pageYOffset || 0;
+
+      document.getElementById('case-id').textContent = id;
+      document.getElementById('case-kicker').textContent = c.kicker || '';
+      document.getElementById('case-title').textContent = c.title;
+      tabs.innerHTML = c.tabs.map(function (t, i) {
+        return '<button type="button" role="tab" class="case-tab"><b>' + (i + 1) + '</b>' + esc(t.label) + '</button>';
+      }).join('');
+      [].forEach.call(tabs.children, function (b, i) { b.addEventListener('click', function () { showTab(i); }); });
+      foot.innerHTML = (c.links || []).map(function (l) {
+        return '<a href="' + esc(l[1]) + '" target="_blank" rel="noopener noreferrer">' + esc(l[0]) + ' \u2197</a>';
+      }).join('');
+
+      // grow out of the row it was opened from
+      var oy = 50;
+      var row = from && from.closest ? (from.closest('li') || from) : null;
+      if (row) {
+        var r = row.getBoundingClientRect();
+        oy = Math.max(0, Math.min(100, ((r.top + r.height / 2) / (innerHeight || 1)) * 100));
+      }
+      panel.style.setProperty('--oy', oy.toFixed(1) + '%');
+
+      root.hidden = false;
+      document.documentElement.classList.add('case-open');
+      void panel.offsetWidth;
+      root.classList.add('in');
+      showTab(0);
+      try { history.replaceState(null, '', '#case-' + id); } catch (e) {}
+      setTimeout(function () { var x = root.querySelector('.case-x'); if (x) x.focus({ preventScroll: true }); }, 30);
+    }
+
+    function close() {
+      if (root.hidden) return;
+      root.classList.remove('in');
+      document.documentElement.classList.remove('case-open');
+      setTimeout(function () {
+        root.hidden = true; body.innerHTML = ''; current = null; shotTab = null; closeLightbox();
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        try { window.scrollTo(0, scrollY); } catch (e) {}
+        if (opener && opener.focus) { try { opener.focus({ preventScroll: true }); } catch (e) {} }
+      }, REDUCE ? 0 : 220);
+    }
+
+    /* delegated clicks: open, close, replay jump, spots, true colour */
+    document.addEventListener('click', function (e) {
+      var go = e.target.closest && e.target.closest('.case-go');
+      if (go) { e.preventDefault(); e.stopPropagation(); open(go.getAttribute('data-case'), go); return; }
+      if (!current) return;
+      if (e.target.closest('[data-close]')) { close(); return; }
+      if (e.target.closest('[data-replay]')) {
+        close();
+        setTimeout(function () {
+          var sec = document.getElementById('replay-sec');
+          if (sec) sec.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+          var first = document.querySelector('.rp-tab'); if (first) first.click();
+        }, REDUCE ? 20 : 260);
+        return;
+      }
+      var tc = e.target.closest('.cs-tc');
+      if (tc) {
+        tinted = !tinted;
+        root.classList.toggle('tinted', tinted);
+        tc.setAttribute('aria-pressed', String(tinted));
+        return;
+      }
+      if (e.target.closest('.lb-x') || (lb && e.target === lb.querySelector('.lb-scroll'))) { closeLightbox(); return; }
+      var bt = e.target.closest('.br-tab');
+      if (bt) { showShot(+bt.getAttribute('data-shot')); return; }
+      var st = e.target.closest('.br-step');
+      if (st) { showShot(shotIx + (+st.getAttribute('data-step'))); return; }
+      if (e.target.closest('.br-view') && !e.target.closest('.spot')) { openLightbox(); return; }
+      var sp = e.target.closest('[data-s]');
+      if (sp) {
+        var key = sp.getAttribute('data-s');
+        [].forEach.call(body.querySelectorAll('[data-s]'), function (n) {
+          n.classList.toggle('lit', n.getAttribute('data-s') === key);
+        });
+      }
+    }, true);
+
+    /* keys: esc closes, digits and arrows switch tabs, tab stays inside */
+    document.addEventListener('keydown', function (e) {
+      if (!current) return;
+      if (e.key === 'Escape') { e.preventDefault(); if (!closeLightbox()) close(); return; }
+      if (lb) return;
+      if (shotTab && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') &&
+          !(e.target && e.target.classList && e.target.classList.contains('case-tab'))) {
+        e.preventDefault(); showShot(shotIx + (e.key === 'ArrowRight' ? 1 : -1)); return;
+      }
+      var n = parseInt(e.key, 10);
+      if (n >= 1 && n <= current.tabs.length && !(e.target && e.target.tagName === 'INPUT')) {
+        e.preventDefault(); showTab(n - 1); return;
+      }
+      if (e.key === 'ArrowRight' && e.target && e.target.classList.contains('case-tab')) { showTab(tabIx + 1); tabs.children[tabIx].focus(); }
+      if (e.key === 'ArrowLeft'  && e.target && e.target.classList.contains('case-tab')) { showTab(tabIx - 1); tabs.children[tabIx].focus(); }
+      if (e.key === 'Tab') {
+        var f = [].slice.call(panel.querySelectorAll('button, a[href], [tabindex="0"]'))
+                  .filter(function (x) { return x.offsetParent !== null; });
+        if (!f.length) return;
+        var a = f[0], z = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); }
+        else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+      }
+    }, true);
+
+    /* deep link: #case-REG-001 */
+    function fromHash() {
+      var m = /^#case-(REG-\d+)$/i.exec(location.hash || '');
+      if (m && CASES[m[1].toUpperCase()]) {
+        var btn = document.querySelector('.case-go[data-case="' + m[1].toUpperCase() + '"]');
+        open(m[1].toUpperCase(), btn);
+      }
+    }
+    addEventListener('hashchange', fromHash);
+    setTimeout(fromHash, 60);
+    window.__openCase = open;
   })();
 
   /* ========================================================

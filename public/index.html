@@ -139,6 +139,20 @@
 <div class="glass hum"></div>
 <div class="glass vig"></div>
 
+<div id="case" class="case" hidden role="dialog" aria-modal="true" aria-labelledby="case-title">
+  <div class="case-scrim" data-close></div>
+  <div class="case-panel" id="case-panel">
+    <header class="case-head">
+      <div class="case-kick"><b id="case-id"></b> <span id="case-kicker"></span></div>
+      <h2 id="case-title"></h2>
+      <button type="button" class="case-x" data-close aria-label="Close case study">esc &times;</button>
+    </header>
+    <div class="case-tabs" id="case-tabs" role="tablist"></div>
+    <div class="case-body" id="case-body" tabindex="-1"></div>
+    <footer class="case-foot" id="case-foot"></footer>
+  </div>
+</div>
+
 <nav id="softkeys" aria-label="Sections">
   <div class="sk-panel" id="sk-panel">
     <div class="sk-bezel" aria-hidden="true"></div>
