@@ -324,9 +324,9 @@ window.PHOSPHOR.cases = {
         "type": "overview",
         "quote": "The model is assumed wrong until the evidence says otherwise.",
         "paras": [
-          "vapt.console takes an engagement from raw scanner output and pasted evidence through triage to a client-ready report. Two language models do the drafting. <b>Neither of them gets the final word.</b>",
-          "Every claim a model makes is either settled by a deterministic check against the evidence, argued against by a second model whose only job is the false-positive case, or held open. Nothing is forced into a verdict to make a dashboard look finished.",
-          "The interesting engineering is not the model calls. It is everything built around them so that a confident wrong answer cannot quietly reach a client."
+          "vapt.console takes an engagement from raw scanner output and pasted evidence through triage to a client-ready report. Two model lanes do the work: a fast extraction model drafts findings, and a reasoning model argues against them. <b>Neither gets the final word.</b>",
+          "Where the evidence can settle a claim mechanically, code settles it. Everything else goes to the reviewer, and a fixed rule \u2014 not either model \u2014 turns its signals into Confirmed, False Positive or Need Review. Ambiguous findings are held rather than forced.",
+          "Credentials and PII are masked before evidence leaves for a provider, while the deterministic checks run locally against the unredacted original, so redaction costs the verification nothing."
         ],
         "facts": [
           [
@@ -339,15 +339,23 @@ window.PHOSPHOR.cases = {
           ],
           [
             "models",
-            "extraction + reviewer, gpt-oss-120b via Groq \u00b7 bring your own key"
+            "two lanes, extraction + reviewer \u00b7 any OpenAI-compatible provider \u00b7 bring your own key"
           ],
           [
             "stack",
-            "Next.js \u00b7 FastAPI \u00b7 Postgres \u00b7 Google OAuth"
+            "Next.js 14 \u00b7 FastAPI \u00b7 Supabase Postgres \u00b7 Auth.js with Google OIDC"
+          ],
+          [
+            "verdicts",
+            "Confirmed \u00b7 False Positive \u00b7 Need Review"
           ],
           [
             "exports",
             "HTML \u00b7 DOCX \u00b7 PDF \u00b7 XLSX \u00b7 JSON"
+          ],
+          [
+            "testing",
+            "offline unit suite, no network \u00b7 labelled eval gates CI"
           ],
           [
             "licence",
@@ -363,27 +371,27 @@ window.PHOSPHOR.cases = {
         "stages": [
           [
             "ingest",
-            "Burp, ZAP, Nessus, Nmap and CSV exports, or pasted HTTP, logs and source. Five scanner dialects normalise into one schema, offline."
+            "Burp, ZAP, Nessus, Nmap and CSV, or pasted HTTP, logs and source. Input with no security-relevant structure is refused before any model call; credentials and PII are masked before anything leaves."
           ],
           [
             "parse",
-            "Evidence is parsed into HTTP exchanges, and each finding is bound to the one exchange it concerns."
+            "Evidence is parsed into discrete HTTP exchanges, and each finding is bound to the one exchange it concerns by its own URL, parameter and method."
           ],
           [
             "verify",
-            "Twelve deterministic checks settle the finding from that exchange. CVSS is recomputed from the vector; quoted evidence is matched back to source."
+            "Twelve verifiers return CONFIRMED, REFUTED or INSUFFICIENT from that exchange. CVSS v3.1 is computed from the vector, and quoted proof is graded VERIFIED, PARTIAL or UNVERIFIED."
           ],
           [
             "challenge",
-            "A second model makes the false-positive case for every finding \u2014 what benign explanation fits the same evidence?"
+            "A reasoning-grade reviewer argues the sceptical case: what benign explanation fits the same evidence? It returns signals, not the verdict."
           ],
           [
             "verdict",
-            "A fixed rule combines the signals. Ambiguous findings are held rather than forced."
+            "A fixed rule combines the signals. A refuted or ungrounded claim is never auto-confirmed, a well-evidenced one is never auto-dismissed, and ambiguity is held for review."
           ],
           [
             "report",
-            "A pre-flight names what should not reach a client before any export: contradicted claims, unadjudicated findings, missing scores."
+            "A pre-flight names what should not reach a client \u2014 contradicted, false-positive, flagged, unadjudicated or unscored findings \u2014 before HTML, DOCX, PDF, XLSX or JSON export."
           ]
         ],
         "replay": "watch it run on real ZAP output"
@@ -392,7 +400,7 @@ window.PHOSPHOR.cases = {
         "id": "decisions",
         "label": "decisions",
         "type": "decisions",
-        "intro": "Lines lifted verbatim from the interface. Each one is a design decision someone would otherwise have made the other way.",
+        "intro": "Lines lifted verbatim from the interface and the README. Each one is a design decision that would otherwise have been made the other way.",
         "items": [
           [
             "A guessed framework category is worse than an absent one, because it looks authoritative in a report.",
@@ -415,11 +423,6 @@ window.PHOSPHOR.cases = {
             "Store the facts, derive the summary. A total kept separately will eventually disagree with its own rows."
           ],
           [
-            "Risk blends CVSS with exploit probability and environment. Severity is the raw rating.",
-            "overview \u00b7 where to start",
-            "Severity describes the bug. Risk describes this client. Conflating them misorders the remediation queue."
-          ],
-          [
             "ATT&CK describes post-compromise behaviour on endpoints, so this is indicative context rather than observed adversary activity.",
             "overview \u00b7 mitre att&ck",
             "Mapping a web finding to a technique is not evidence anyone used it, and the interface says so."
@@ -428,6 +431,26 @@ window.PHOSPHOR.cases = {
             "Checked against the selection, not the whole project.",
             "reports \u00b7 pre-flight",
             "Warnings about findings you are not shipping are noise, and noise trains people to click past warnings."
+          ],
+          [
+            "Silence is never refutation: evidence without a Set-Cookie header does not disprove a cookie finding.",
+            "readme \u00b7 verifiers",
+            "An absent header in an excerpt proves the excerpt is partial, not that the finding is false."
+          ],
+          [
+            "A scan that did not cover something is not evidence it is gone.",
+            "readme \u00b7 finding identity",
+            "Open findings a rescan did not report are listed, never auto-closed."
+          ],
+          [
+            "A finding re-rated from High to Critical is the same finding.",
+            "readme \u00b7 finding identity",
+            "Severity is excluded from identity, so a finding keeps its history at the moment it gets worse."
+          ],
+          [
+            "Confidence is earned by signals agreeing, not by asking the model to sound certain.",
+            "readme \u00b7 verdict engine",
+            "A model told to be decisive will be. That is not the same as being right."
           ]
         ]
       },
@@ -490,7 +513,7 @@ window.PHOSPHOR.cases = {
               [
                 27,
                 14.5,
-                "Two model roles named on screen: extraction drafts, the reviewer challenges. Check pings both before a run."
+                "Both lanes shown as the pipeline will resolve them. Check is manual on purpose: one tiny call per lane, so page loads never spend quota."
               ],
               [
                 26,
@@ -565,12 +588,12 @@ window.PHOSPHOR.cases = {
               [
                 29,
                 81,
-                "Shipping flagged findings needs an explicit, recorded acknowledgement."
+                "Serious cases need a deliberate acknowledgement, and it resets whenever the selection changes \u2014 no muscle-memory click."
               ],
               [
                 29,
                 91,
-                "HTML by default \u2014 opens anywhere, sends as one file, keeps evidence readable."
+                "HTML opens anywhere, sends as one file and keeps evidence readable; DOCX, PDF, XLSX and JSON alongside."
               ]
             ],
             "src1": "/assets/cases/vc-reports-1280.webp"
