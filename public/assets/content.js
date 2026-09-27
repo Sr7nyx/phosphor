@@ -48,7 +48,7 @@ window.PHOSPHOR = {
   hero: {
     typed: [
       '$ whoami',
-      '  sunterresaa sankar \u2014 penetration tester, airasia',
+      '  sunterresaa sankar \u2014 penetration tester \u00b7 open to roles',
       '$ focus --list',
       '  web + api testing. vulnerability triage. llm pipeline security.',
       '$ scope --status',
@@ -62,9 +62,10 @@ window.PHOSPHOR = {
      ------------------------------------------------------ */
   commands: {
     whoami: [
-      'sunterresaa sankar \u2014 penetration tester, airasia',
+      'sunterresaa sankar \u2014 penetration tester \u00b7 open to roles',
+      'previously airasia (k-youth) \u00b7 merchantrade asia',
       'bcs (hons) cybersecurity, multimedia university \u00b7 cgpa 3.60',
-      'huawei hcia-security v4.0 \u00b7 hcia-ai v3.5'
+      'comptia tech+ \u00b7 huawei hcia-security v4.0 \u00b7 hcia-ai v3.5'
     ],
     stack: [
       'burp suite \u00b7 nessus \u00b7 nmap \u00b7 zap \u00b7 metasploit \u00b7 wireshark \u00b7 beyondtrust',
@@ -94,7 +95,7 @@ window.PHOSPHOR = {
     { g: 'triage',      items: ['cvss v3.1', 'epss', 'cisa kev', 'ssvc', 'owasp top 10', 'api top 10', 'cwe mapping'] },
     { g: 'governance',  items: ['beyondtrust', 'cis benchmarks', 'server hardening', 'privileged access', 'audit readiness'] },
     { g: 'build',       items: ['python', 'javascript', 'typescript', 'react', 'next.js', 'fastapi', 'node', 'solidity', 'docker', 'postgres', 'linux'] },
-    { g: 'certs',       items: ['hcia-security v4.0', 'hcia-ai v3.5', 'bcs (hons) cybersecurity'] }
+    { g: 'certs',       items: ['comptia tech+', 'hcia-security v4.0', 'hcia-ai v3.5', 'red teaming l0 workshop \u00b7 0day academy', 'bcs (hons) cybersecurity'] }
   ],
 
   /* career trace ------------------------------------------
@@ -114,10 +115,12 @@ window.PHOSPHOR = {
       note: 'FYP <b>DocuChain</b> \u2014 blockchain document verification on Ethereum + IPFS', state: 'up' },
     { t: '[  0x4D455243]', when: 'Jul \u2013 Dec 2025', what: 'InfoSec Compliance Intern', where: 'Merchantrade Asia',
       note: 'privileged-access reviews \u00b7 CIS hardening \u00b7 audit readiness at a licensed FSI', state: 'up' },
-    { t: '[  0x4B594F55]', when: 'Apr \u2013 Jul 2026', what: 'K-Youth Development Programme', where: 'Khazanah Nasional Berhad',
+    { t: '[  0x4B594F55]', when: 'Apr \u2013 May 2026', what: 'K-Youth Development Programme', where: 'Khazanah Nasional Berhad',
       note: 'national talent programme \u2014 industry readiness across security + governance', state: 'up' },
-    { t: '[  now.online]', when: 'May 2026 \u2192', what: 'Penetration Tester', where: 'AirAsia',
-      note: 'weekly VA + manual web testing on production \u00b7 triage \u00b7 remediation to close', state: 'active' }
+    { t: '[  0x41495241]', when: 'Apr \u2013 Aug 2026', what: 'Penetration Tester', where: 'AirAsia \u00b7 via K-Youth',
+      note: 'weekly VA + manual web testing on production \u00b7 triage \u00b7 remediation to close', state: 'up' },
+    { t: '[  now.online]', when: 'Sep 2026 \u2192', what: 'Open to roles', where: 'penetration testing \u00b7 vulnerability management \u00b7 AI security',
+      note: 'building <b>AEVP</b> and <b>vapt.console</b> in the meantime', state: 'active' }
   ],
 
   /* register --------------------------------------------- */
@@ -140,9 +143,9 @@ window.PHOSPHOR = {
       // links: [{ l: 'source', u: 'https://github.com/Sr7nyx/aevp-range' }]
       links: [] },
 
-    { s: 3, id: 'REG-003', title: 'Production testing at AirAsia', status: 'ongoing',
+    { s: 3, id: 'REG-003', title: 'Production testing at AirAsia', status: 'closed',
       lead: 'weekly VA + manual testing on production \u00b7 severity by business impact \u00b7 remediation tracked to close',
-      body: 'Weekly automated vulnerability assessment and manual web application testing against production assets, driven off active security tickets. I validate what the scanners raise, assign severity against business impact rather than default scanner ratings, and work with the IT and application teams through patching, configuration fixes and retest.<br><br>The reporting side is half the job: vulnerability reports, ticket lifecycle, and remediation KPIs that show whether risk is actually going down.',
+      body: 'April to August 2026: weekly automated vulnerability assessment and manual web application testing against production assets, driven off active security tickets. I validated what the scanners raised, assigned severity against business impact rather than default scanner ratings, and worked with the IT and application teams through patching, configuration fixes and retest.<br><br>The reporting side was half the job: vulnerability reports, ticket lifecycle, and remediation KPIs that showed whether risk was actually going down.',
       meta: ['burp suite', 'nessus', 'cvss v3.1', 'remediation tracking'],
       links: [] },
 
