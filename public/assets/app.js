@@ -1390,7 +1390,7 @@
             return '<li><span class="cs-n">' + String(i + 1).padStart(2, '0') + '</span>' +
                    '<b>' + esc(st[0]) + '</b><span>' + esc(st[1]) + '</span></li>';
           }).join('') + '</ol>' +
-          (t.replay ? '<button type="button" class="cs-cta" data-replay="1">' + esc(t.replay) + ' \u2192</button>' : '');
+          (t.replay ? '<button type="button" class="cs-cta" data-replay="' + (t.replayTab || 0) + '">' + esc(t.replay) + ' \u2192</button>' : '');
       },
       decisions: function (t) {
         return '<p class="cs-intro">' + esc(t.intro) + '</p><ol class="cs-dec">' +
@@ -1399,6 +1399,35 @@
                    '<q>' + esc(d[0]) + '</q><small>' + esc(d[1]) + '</small>' +
                    '<p>' + esc(d[2]) + '</p></div></li>';
           }).join('') + '</ol>';
+      },
+      matrix: function (t) {
+        var head = '<tr><th scope="col">case</th><th scope="col">tier</th>' + t.models.map(function (m) {
+          return '<th scope="col"><b>' + esc(m.name) + '</b><small>' + esc(m.shape) + '</small></th>';
+        }).join('') + '</tr>';
+        var rows = t.rows.map(function (r) {
+          if (r.detected) {
+            return '<tr class="mx-g"><th scope="row">' + esc(r.label) + '</th><td class="mx-t">' + esc(r.note) + '</td>' +
+              r.detected.map(function (d) { return '<td class="mx-det">' + (d ? 'detected' : 'missed') + '</td>'; }).join('') + '</tr>';
+          }
+          return r.tiers.map(function (tr, i) {
+            return '<tr' + (i === 0 ? ' class="mx-g"' : '') + '>' +
+              (i === 0 ? '<th scope="row" rowspan="' + r.tiers.length + '">' + esc(r.label) +
+                         (r.flag ? '<em>' + esc(r.flag) + '</em>' : '') + '</th>' : '') +
+              '<td class="mx-t">' + esc(tr.tier) + '</td>' +
+              tr.cells.map(function (c) {
+                var k = c[0], n = c[1], lo = c[2], hi = c[3], pct = Math.round(k / n * 1000) / 10;
+                return '<td class="mx-c" data-hot="' + (pct >= 50 ? 2 : pct > 0 ? 1 : 0) + '">' +
+                  '<span class="mx-v">' + pct + '%</span><span class="mx-n">' + k + '/' + n + '</span>' +
+                  '<span class="mx-bar"><i data-lo="' + lo + '" data-hi="' + hi + '" data-p="' + pct + '"></i></span>' +
+                  '<span class="mx-ci">[' + Math.round(lo) + '\u2013' + Math.round(hi) + ']</span></td>';
+              }).join('') + '</tr>';
+          }).join('');
+        }).join('');
+        var ctl = '<dl class="mx-ctl"><dt>negative control</dt>' + t.control.map(function (c) {
+          return '<dd><b>' + esc(c[0]) + '</b> ' + esc(c[1]) + ' fired <span>FP &lt; ' + esc(c[2]) + '</span></dd>';
+        }).join('') + '</dl>';
+        return '<p class="cs-intro">' + esc(t.intro) + '</p>' +
+          '<div class="mx-wrap"><table class="mx"><thead>' + head + '</thead><tbody>' + rows + '</tbody></table></div>' + ctl;
       },
       screens: function (t) {
         return '<div class="cs-screens-bar"><p class="cs-intro">' + esc(t.intro) + '</p>' +
@@ -1490,6 +1519,13 @@
       var t = list[tabIx];
       body.innerHTML = '<div class="cs-pane cs-' + t.type + '">' + (R[t.type] ? R[t.type](t) : '') + '</div>';
       body.scrollTop = 0;
+      // Wilson bands: geometry through the CSSOM (CSP forbids style="")
+      [].forEach.call(body.querySelectorAll('.mx-bar i'), function (b) {
+        var lo = +b.getAttribute('data-lo'), hi = +b.getAttribute('data-hi'), pv = +b.getAttribute('data-p');
+        b.style.left = lo + '%';
+        b.style.width = Math.max(hi - lo, 0.6) + '%';
+        b.style.setProperty('--pt', (hi > lo ? ((pv - lo) / (hi - lo)) * 100 : 0) + '%');
+      });
       shotTab = (t.type === 'screens') ? t : null;
       if (shotTab) showShot(0);
     }
@@ -1547,11 +1583,12 @@
       if (!current) return;
       if (e.target.closest('[data-close]')) { close(); return; }
       if (e.target.closest('[data-replay]')) {
+        var rix = +(e.target.closest('[data-replay]').getAttribute('data-replay')) || 0;
         close();
         setTimeout(function () {
           var sec = document.getElementById('replay-sec');
           if (sec) sec.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
-          var first = document.querySelector('.rp-tab'); if (first) first.click();
+          var tabsEl = document.querySelectorAll('.rp-tab'); if (tabsEl[rix]) tabsEl[rix].click();
         }, REDUCE ? 20 : 260);
         return;
       }

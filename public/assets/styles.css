@@ -1219,3 +1219,39 @@ section:focus{ outline:none; }
   .br-sch{ display:none; }
   .lb-scroll img{ width:1600px; }
 }
+
+/* ---------- results matrix: ASR with its Wilson band ---------- */
+.mx-wrap{ overflow-x:auto; overscroll-behavior-x:contain; border:1px solid var(--phosphor-ash); }
+.mx{ width:100%; min-width:640px; border-collapse:collapse; font-size:12px; }
+.mx th, .mx td{ padding:.45rem .7rem; border-bottom:1px solid rgba(58,36,9,.6); text-align:left; vertical-align:middle; }
+.mx thead th{
+  position:sticky; top:0; background:rgba(14,9,4,.98); z-index:1;
+  font-weight:400; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--phosphor-dim);
+  border-bottom:1px solid var(--phosphor-ash);
+}
+.mx thead th b{ display:block; color:var(--phosphor-hot); font-weight:500; letter-spacing:.08em; text-transform:none; font-size:12px; }
+.mx thead th small{ display:block; margin-top:.15rem; color:var(--signal); letter-spacing:.2em; }
+.mx tbody th{ color:var(--phosphor); font-weight:500; font-size:12px; width:17ch; }
+.mx tbody th em{ display:block; margin-top:.3rem; font-style:normal; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--phosphor-dim); }
+.mx tr.mx-g > *{ border-top:1px solid var(--phosphor-ash); }
+.mx-t{ color:var(--phosphor-dim); font-size:11px; letter-spacing:.1em; text-transform:uppercase; white-space:nowrap; }
+.mx-c{ min-width:15ch; }
+.mx-v{ color:var(--phosphor); font-variant-numeric:tabular-nums; }
+.mx-c[data-hot="0"] .mx-v{ color:var(--phosphor-dim); }
+.mx-c[data-hot="2"] .mx-v{ color:var(--phosphor-hot); text-shadow:0 0 8px rgba(255,163,26,.5); }
+.mx-n{ margin-left:.7ch; color:var(--phosphor-dim); font-size:10px; }
+.mx-ci{ display:block; color:var(--phosphor-dim); font-size:10px; margin-top:.15rem; }
+.mx-bar{ position:relative; display:block; height:6px; margin-top:.35rem; background:rgba(58,36,9,.55); }
+.mx-bar i{ position:absolute; top:0; bottom:0; display:block; background:rgba(255,163,26,.35); border-left:1px solid var(--phosphor-dim); border-right:1px solid var(--phosphor-dim); }
+.mx-c[data-hot="2"] .mx-bar i{ background:rgba(255,163,26,.55); }
+.mx-bar i::after{       /* the point estimate inside its interval */
+  content:""; position:absolute; top:-2px; bottom:-2px; width:2px; left:var(--pt, 0%);
+  transform:translateX(-1px); background:var(--phosphor-hot); box-shadow:0 0 6px var(--phosphor);
+}
+.mx-det{ color:var(--signal); font-size:11px; letter-spacing:.16em; text-transform:uppercase; }
+.mx-ctl{ display:flex; flex-wrap:wrap; gap:.5rem var(--gut); margin:var(--cell) 0 0; font-size:12px; }
+.mx-ctl dt{ width:100%; font-size:10px; letter-spacing:.24em; text-transform:uppercase; color:var(--phosphor-dim); }
+.mx-ctl dd{ margin:0; color:var(--phosphor); }
+.mx-ctl dd b{ font-weight:500; color:var(--phosphor-hot); margin-right:.6ch; }
+.mx-ctl dd span{ margin-left:.6ch; color:var(--signal); }
+.mx-ctl dd:last-child{ padding-left:var(--cell); border-left:1px solid var(--phosphor-ash); }
