@@ -1052,7 +1052,7 @@ section:focus{ outline:none; }
 
 .case-body{ flex:1; overflow-y:auto; overscroll-behavior:contain; padding:calc(var(--cell) * 1.2) calc(var(--cell) * 1.4) var(--gut); }
 .cs-pane{ max-width:78ch; animation:wipe .24s ease-out; }
-.cs-screens{ max-width:none; }
+.cs-screens, .cs-matrix{ max-width:none; }
 .case-foot{
   display:flex; gap:var(--gut); padding:.6rem calc(var(--cell) * 1.4);
   border-top:1px solid var(--phosphor-ash);
@@ -1255,3 +1255,13 @@ section:focus{ outline:none; }
 .mx-ctl dd b{ font-weight:500; color:var(--phosphor-hot); margin-right:.6ch; }
 .mx-ctl dd span{ margin-left:.6ch; color:var(--signal); }
 .mx-ctl dd:last-child{ padding-left:var(--cell); border-left:1px solid var(--phosphor-ash); }
+
+/* matrix layout: the table owns the pane's full width, columns in fixed proportion */
+.mx{ table-layout:fixed; }
+.mx thead th:nth-child(1){ width:18%; }
+.mx thead th:nth-child(2){ width:12%; }
+.mx thead th:nth-child(n+3){ width:23.33%; }
+.mx-note{ white-space:normal; line-height:1.5; letter-spacing:.08em; }
+.mx-c{ min-width:0; }
+.mx-bar{ max-width:220px; }
+.cs-matrix .cs-intro{ max-width:78ch; }

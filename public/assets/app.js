@@ -1406,7 +1406,7 @@
         }).join('') + '</tr>';
         var rows = t.rows.map(function (r) {
           if (r.detected) {
-            return '<tr class="mx-g"><th scope="row">' + esc(r.label) + '</th><td class="mx-t">' + esc(r.note) + '</td>' +
+            return '<tr class="mx-g"><th scope="row">' + esc(r.label) + '</th><td class="mx-t mx-note">' + esc(r.note) + '</td>' +
               r.detected.map(function (d) { return '<td class="mx-det">' + (d ? 'detected' : 'missed') + '</td>'; }).join('') + '</tr>';
           }
           return r.tiers.map(function (tr, i) {
