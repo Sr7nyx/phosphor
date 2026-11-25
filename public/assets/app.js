@@ -323,8 +323,10 @@
       var cy = Math.cos(t * 0.23), sy = Math.sin(t * 0.23);
       var cx = Math.cos(t * 0.17), sx = Math.sin(t * 0.17);
       var asp = W / Math.max(H, 1);
-      var cxp = asp * 0.30, cyp = 0.26;               // sits upper-right of centre
-      var R = 0.115 + Math.sin(t * 0.7) * 0.004;      // slight breathe
+      var narrow = innerWidth < 720;
+      var cxp = narrow ? asp * 0.22 : asp * 0.30;
+      var cyp = narrow ? 0.34 : 0.26;                 // phones: smaller, higher, out of the text
+      var R = (narrow ? 0.075 : 0.115) + Math.sin(t * 0.7) * 0.004;
       var n = Math.min(EDGES.length, 30);
       for (var i = 0; i < n; i++) {
         for (var k = 0; k < 2; k++) {
@@ -444,6 +446,9 @@
         var segN = projectWire(t);
         gl.uniform4fv(U.sceneSeg, SEG);
         gl.uniform1f(U.sceneSgN, segN);
+        // on phones the solid only belongs to the hero; it fades out as content arrives
+        var wireTarget = (innerWidth < 720 && (window.pageYOffset || 0) > innerHeight * 0.45) ? 0 : 1;
+        WIRE_ON += (wireTarget - WIRE_ON) * 0.06;
         gl.uniform1f(U.sceneWir, WIRE_ON);
       });
 
@@ -570,9 +575,101 @@
     var host = document.getElementById('trace');
     var sect = document.getElementById('trace-sec');
     var rows = DATA.timeline || [];
+    var story = DATA.story || [];
     if (!host) return;
-    if (!rows.length) { if (sect) sect.style.display = 'none'; return; }
-    host.innerHTML = rows.map(function (r) {
+    if (!rows.length && !story.length) { if (sect) sect.style.display = 'none'; return; }
+
+    function sesc(t) {
+      return String(t).replace(/[&<>"']/g, function (c) {
+        return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c];
+      });
+    }
+    function card(c) {
+      if (!c) return '';
+      if (c.kind === 'sample') {
+        // one row per line; key and value in their own columns so a long
+        // value wraps under itself instead of back to the left edge
+        var lines = String(c.code).split('\n').map(function (ln) {
+          if (!ln.trim()) return '<span class="rw rw-gap"></span>';
+          if (/^#/.test(ln)) return '<span class="rw cm">' + sesc(ln) + '</span>';
+          var m = /^(\S+(?: \S+)?)\s{2,}(.*)$/.exec(ln);
+          return m ? '<span class="rw"><span class="kk">' + sesc(m[1]) + '</span><span class="vv">' + sesc(m[2]) + '</span></span>'
+                   : '<span class="rw">' + sesc(ln) + '</span>';
+        }).join('');
+        return '<div class="ev ev-sample"><span class="ev-src">' + sesc(c.src) + '</span>' +
+               '<pre class="ev-pre">' + lines + '</pre>' +
+               (c.note ? '<span class="ev-after">' + sesc(c.note) + '</span>' : '') + '</div>';
+      }
+      if (c.kind === 'internal') {
+        return '<div class="ev ev-none"><span class="ev-src">internal work \u00b7 no public record</span>' +
+               '<span class="ev-after">' + sesc(c.note) + '</span></div>';
+      }
+      var head = '<span class="ev-bar" aria-hidden="true"><i></i><i></i><i></i>' +
+                 '<span class="ev-url">' + sesc(c.addr) + '</span></span>' +
+                 '<span class="ev-src">' + sesc(c.src) + '</span>';
+      var bodyHtml = c.kind === 'record'
+        ? '<dl class="ev-rec">' + c.fields.map(function (f) {
+            return '<div><dt>' + sesc(f[0]) + '</dt><dd>' + sesc(f[1]) + '</dd></div>';
+          }).join('') + '</dl>'
+        : (c.code ? '<pre class="ev-pre ev-src-code">' + String(c.quote).split('\n').map(function (ln) {
+              // hanging indent: a wrapped line continues one step in from its own indent
+              var n = Math.min(16, (/^ */.exec(ln)[0].length / 4 | 0) * 4);
+              return '<span class="ln i' + n + '">' + sesc(ln.replace(/^ +/, '')) + '</span>';
+            }).join('') + '</pre>'
+                  : '<span class="ev-q">' + sesc(c.quote) + '</span>');
+      return '<a class="ev" href="' + sesc(c.url) + '" target="_blank" rel="noopener noreferrer">' +
+             head + bodyHtml +
+             (c.after ? '<span class="ev-after">' + sesc(c.after) + '</span>' : '') +
+             '<span class="ev-go">open source \u2197</span></a>';
+    }
+
+    if (story.length) {
+      var idx = document.getElementById('st-index');
+      if (idx) {
+        idx.innerHTML = story.map(function (c, i) {
+          return '<li><button type="button" data-ch="' + sesc(c.id) + '">' +
+                 '<span class="st-n">' + String(i + 1).padStart(2, '0') + '</span>' +
+                 '<span class="st-iy">' + sesc(c.year) + '</span>' +
+                 '<span class="st-it">' + sesc(c.title) + '</span></button></li>';
+        }).join('');
+        idx.addEventListener('click', function (e) {
+          var b = e.target.closest('button[data-ch]'); if (!b) return;
+          var el = document.getElementById('ch-' + b.getAttribute('data-ch'));
+          if (el) el.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+        });
+      }
+      host.classList.add('story');
+      host.innerHTML = story.map(function (c) {
+        return '<li class="tr-row st-ch" id="ch-' + sesc(c.id) + '" data-state="' + (c.state || 'up') + '">' +
+          '<span class="st-y">' + sesc(c.year) + '</span>' +
+          '<div class="st-main"><h3 class="st-h">' + sesc(c.title) + '</h3>' +
+          '<p class="st-p">' + sesc(c.body) + '</p>' + card(c.card) + '</div></li>';
+      }).join('');
+      // reveal: a chapter powers on as the reader reaches it, in sequence
+      if (!REDUCE && 'IntersectionObserver' in window) {
+        host.classList.add('reveal');
+        var rio = new IntersectionObserver(function (es) {
+          es.forEach(function (en) {
+            if (!en.isIntersecting) return;
+            en.target.classList.add('in');
+            rio.unobserve(en.target);
+          });
+        }, { rootMargin: '0px 0px -16% 0px', threshold: 0.08 });
+        [].forEach.call(host.querySelectorAll('.st-ch'), function (li) { rio.observe(li); });
+      }
+      // keep the index in step with the chapter being read
+      if (idx && 'IntersectionObserver' in window) {
+        var ib = [].slice.call(idx.querySelectorAll('button'));
+        var cio = new IntersectionObserver(function (es) {
+          es.forEach(function (en) {
+            if (!en.isIntersecting) return;
+            var id = en.target.id.replace(/^ch-/, '');
+            ib.forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-ch') === id); });
+          });
+        }, { rootMargin: '-45% 0px -50% 0px' });
+        [].forEach.call(host.querySelectorAll('.st-ch'), function (li) { cio.observe(li); });
+      }
+    } else host.innerHTML = rows.map(function (r) {
       return '<li class="tr-row" data-state="' + (r.state || 'up') + '">' +
         '<span class="tr-t">' + r.t + '</span>' +
         '<span class="tr-main">' +
@@ -1047,7 +1144,7 @@
     var KEYS = [
       { k: '1', id: 'findings-sec', label: 'register' },
       { k: '2', id: 'skills-sec',   label: 'caps'     },
-      { k: '3', id: 'trace-sec',    label: 'trace'    },
+      { k: '3', id: 'trace-sec',    label: 'story'    },
       { k: '4', id: 'recon-sec',    label: 'recon'    },
       { k: '5', id: 'replay-sec',   label: 'replay'   },
       { k: '6', id: 'contact-sec',  label: 'contact'  },

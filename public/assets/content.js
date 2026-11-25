@@ -123,6 +123,76 @@ window.PHOSPHOR = {
       note: '<b>AEVP</b> writeup published \u00b7 <b>vapt.console</b> live', state: 'active' }
   ],
 
+  /* story ---------------------------------------------------
+     Replaces the career trace. One question, told in chapters,
+     each with its receipt. A chapter's 'card' is the evidence:
+       kind 'source'   a public file, quoted verbatim, linked
+       kind 'record'   a verified credential, shown as fields
+       kind 'internal' employer work: no public record, by design
+       kind 'sample'   an illustrative record, labelled, no client data
+     ---------------------------------------------------------- */
+  story: [
+    { id: 'degree', year: '2022 → 2025', title: 'what counts as genuine', state: 'up',
+      body: 'A Bachelor of Computer Science in cybersecurity at Multimedia University, finished in December 2025 with a 3.60 CGPA. The final-year project asked the question everything since has circled: how do you prove something is genuine without trusting whoever hands it to you?',
+      card: { kind: 'source', url: 'https://github.com/Sunteresa7/DocuChain/blob/master/truffle/contracts/DocumentVerification.sol',
+              addr: 'github.com/Sunteresa7/DocuChain', src: 'docuchain · DocumentVerification.sol · jun 2025', code: true,
+              quote: 'function verifyDocumentCID(address user, string memory cid) public view returns (bool) {\n    string[] memory cids = userCIDs[user];\n    for (uint256 i = 0; i < cids.length; i++) {\n        if (keccak256(abi.encodePacked(cids[i])) == keccak256(abi.encodePacked(cid))) {\n            return true;\n        }\n    }\n    return false;\n}',
+              after: 'A document is genuine if its IPFS content identifier is recorded on-chain for that user. Nobody’s word is involved.' } },
+
+    { id: 'audit', year: 'Jul 2025', title: 'evidence for auditors', state: 'up',
+      body: 'Six months of information security compliance at Merchantrade Asia: privileged-access reviews in BeyondTrust, CIS Benchmark hardening reviews, audit readiness. The lesson came from the auditors. A control nobody can show evidence for does not exist, however sure its owner is.',
+      card: { kind: 'sample', src: 'illustrative record · no client data',
+              code: '# privileged access review\n' +
+                    'account     svc-example-admin\n' +
+                    'privilege   local administrator, 4 servers\n' +
+                    'last used   127 days ago\n' +
+                    'owner       not confirmed\n' +
+                    'evidence    no approved access request on file\n' +
+                    'outcome     revoke, or re-certify with a named owner\n' +
+                    '\n' +
+                    '# hardening gap against a CIS benchmark\n' +
+                    'control     minimum password length\n' +
+                    'expected    14 characters or more\n' +
+                    'observed    8 characters\n' +
+                    'evidence    exported policy, timestamped\n' +
+                    'outcome     gap logged, owner assigned, re-checked next cycle',
+              note: 'The shape of the work, not the work. No employer system, account or finding appears here.' } },
+
+    { id: 'airasia', year: 'Apr 2026', title: 'scanners that cry wolf', state: 'up',
+      body: 'Penetration tester at AirAsia through the K-Youth programme, until August 2026: weekly automated scans and manual web testing against production. Most of the job was deciding which findings were real. A tool that reports everything with confidence makes the analyst the only filter, and the analyst runs out of hours first.',
+      card: { kind: 'sample', src: 'illustrative record · no client data',
+              code: '# scanner finding, triaged\n' +
+                    'scanner     Medium · missing X-Frame-Options header\n' +
+                    'check       response sets CSP frame-ancestors \'self\'\n' +
+                    'verdict     false positive: protection present, newer header\n' +
+                    'evidence    raw response attached to the ticket\n' +
+                    'outcome     closed with evidence, scanner rule noted\n' +
+                    '\n' +
+                    '# and when it is real\n' +
+                    'severity    re-rated on business impact, not the scanner default\n' +
+                    'handover    owner, fix, retest date agreed with the app team\n' +
+                    'tracked     open until a retest proves it closed',
+              note: 'The shape of the work, not the work. No employer system, account or finding appears here.' } },
+
+    { id: 'vapt', year: 'Jul 2026', title: 'teaching a tool to doubt', state: 'up',
+      body: 'So I built the filter. vapt.console takes scanner output and evidence through to a client report: one model drafts findings, a second argues against them, and code settles whatever the evidence can settle. Its rules are written for the case where a model is confidently wrong.',
+      card: { kind: 'source', url: 'https://github.com/Sr7nyx/vapt-ai-assistant#readme',
+              addr: 'github.com/Sr7nyx/vapt-ai-assistant', src: 'vapt.console · README · first commit 16 jul 2026',
+              quote: 'Silence is never refutation: evidence without a Set-Cookie header does not disprove a cookie finding, because the response that set it may simply not be in the excerpt…' } },
+
+    { id: 'aevp', year: 'Sep 2026', title: 'proving the proof', state: 'up',
+      body: 'vapt.console still trusted its own checks. AEVP asks how you would know if a check fired on something harmless: every attack runs beside a benign twin that has to stay silent, so the false-positive rate is measured instead of assumed. Three models, six agentic risk classes, about USD 10.',
+      card: { kind: 'source', url: 'https://github.com/Sr7nyx/aevp-range/blob/main/WRITEUP.md',
+              addr: 'github.com/Sr7nyx/aevp-range/WRITEUP.md', src: 'aevp · method writeup · 28 sep 2026',
+              quote: 'the negative control held at 0 of 399 benign twins (false-positive rate below 0.95% at 95% confidence)' } },
+
+    { id: 'now', year: 'Nov 2026', title: 'now', state: 'active',
+      body: 'Open to roles in penetration testing, vulnerability management and AI security. CompTIA Tech+, Huawei HCIA-Security and HCIA-AI. Same question as the final-year project, better tools for answering it.',
+      card: { kind: 'record', url: 'https://www.credly.com/badges/1724f773-3408-4b68-a224-3441fc3c8075/public_url',
+              addr: 'credly.com/badges/1724f773…', src: 'credly · verified credential',
+              fields: [['badge', 'CompTIA Tech+ Certification'], ['issued to', 'Sunterresaa Sankar'], ['issuer', 'CompTIA'], ['passed', '19 Sep 2026']] } }
+  ],
+
   /* register --------------------------------------------- */
   findings: [
 
@@ -415,7 +485,7 @@ window.PHOSPHOR.cases = {
             "Warnings about findings you are not shipping are noise, and noise trains people to click past warnings."
           ],
           [
-            "Silence is never refutation: evidence without a Set-Cookie header does not disprove a cookie finding.",
+            "Silence is never refutation: evidence without a Set-Cookie header does not disprove a cookie finding\u2026",
             "readme \u00b7 verifiers",
             "An absent header in an excerpt proves the excerpt is partial, not that the finding is false."
           ],
